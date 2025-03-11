@@ -87,7 +87,7 @@ public final class StartupMessage implements FrontendMessage {
             ByteBuf out = byteBufAllocator.ioBuffer();
 
             writeLengthPlaceholder(out);
-            writeShort(out, 3, 0);
+            writeShort(out, 3, 51);
             writeParameter(out, USER, this.username);
 
             if (this.database != null) {

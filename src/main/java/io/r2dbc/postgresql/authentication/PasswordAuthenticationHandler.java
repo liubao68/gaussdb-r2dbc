@@ -19,8 +19,10 @@ package io.r2dbc.postgresql.authentication;
 import io.r2dbc.postgresql.message.backend.AuthenticationCleartextPassword;
 import io.r2dbc.postgresql.message.backend.AuthenticationMD5Password;
 import io.r2dbc.postgresql.message.backend.AuthenticationMessage;
+import io.r2dbc.postgresql.message.backend.AuthenticationSHA256Password;
 import io.r2dbc.postgresql.message.frontend.FrontendMessage;
 import io.r2dbc.postgresql.message.frontend.PasswordMessage;
+import io.r2dbc.postgresql.message.frontend.SHA256PasswordMessage;
 import io.r2dbc.postgresql.util.Assert;
 
 /**
@@ -54,7 +56,9 @@ public final class PasswordAuthenticationHandler implements AuthenticationHandle
     public static boolean supports(AuthenticationMessage message) {
         Assert.requireNonNull(message, "message must not be null");
 
-        return message instanceof AuthenticationCleartextPassword || message instanceof AuthenticationMD5Password;
+        return message instanceof AuthenticationCleartextPassword
+            || message instanceof AuthenticationMD5Password
+            || message instanceof AuthenticationSHA256Password;
     }
 
     @Override
@@ -65,12 +69,18 @@ public final class PasswordAuthenticationHandler implements AuthenticationHandle
             return handleAuthenticationClearTextPassword();
         } else if (message instanceof AuthenticationMD5Password) {
             return handleAuthenticationMD5Password((AuthenticationMD5Password) message);
+        } else if (message instanceof AuthenticationSHA256Password) {
+            return handleAuthenticationSHA256Password((AuthenticationSHA256Password) message);
         } else {
             throw new IllegalArgumentException(String.format("Cannot handle %s message", message.getClass().getSimpleName()));
         }
     }
 
-    private PasswordMessage handleAuthenticationClearTextPassword() {
+  private FrontendMessage handleAuthenticationSHA256Password(AuthenticationSHA256Password message) {
+      return new SHA256PasswordMessage(this.username, this.password, message);
+  }
+
+  private PasswordMessage handleAuthenticationClearTextPassword() {
         return new PasswordMessage(this.password);
     }
 

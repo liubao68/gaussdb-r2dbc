@@ -74,33 +74,6 @@ final class BackendMessageDecoderUnitTests {
     }
 
     @Test
-    void authenticationSASL() {
-        BackendMessage message = decode('R', buffer -> {
-            buffer.writeInt(10);
-
-            buffer.writeCharSequence("test-authentication-mechanism", UTF_8);
-            buffer.writeByte(0);
-
-            buffer.writeByte(0);
-
-            return buffer;
-        });
-        assertThat(message).isEqualTo(new AuthenticationSASL(Collections.singletonList("test-authentication-mechanism")));
-    }
-
-    @Test
-    void authenticationSASLContinue() {
-        BackendMessage message = decode('R', buffer -> buffer.writeInt(11).writeInt(100));
-        assertThat(message).isEqualTo(new AuthenticationSASLContinue(TEST.buffer(4).writeInt(100)));
-    }
-
-    @Test
-    void authenticationSASLFinal() {
-        BackendMessage message = decode('R', buffer -> buffer.writeInt(12).writeInt(100));
-        assertThat(message).isEqualTo(new AuthenticationSASLFinal(TEST.buffer(4).writeInt(100)));
-    }
-
-    @Test
     void authenticationSCMCredential() {
         BackendMessage message = decode('R', buffer -> buffer.writeInt(6));
         assertThat(message).isEqualTo(AuthenticationSCMCredential.INSTANCE);
