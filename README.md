@@ -1,13 +1,12 @@
-# PostgreSQL R2DBC Driver [![Java CI with Maven](https://github.com/pgjdbc/r2dbc-postgresql/workflows/Java%20CI%20with%20Maven/badge.svg?branch=main)](https://github.com/pgjdbc/r2dbc-postgresql/actions?query=workflow%3A%22Java+CI+with+Maven%22+branch%3Amain) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.postgresql/r2dbc-postgresql/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.postgresql/r2dbc-postgresql)
+# GaussDB R2DBC Driver
 
-This project contains the [PostgreSQL][p] implementation of the [R2DBC SPI][r].  This implementation is not intended to be used directly, but rather to be used as the backing implementation for a humane client library to delegate to.
+This project contains the [GaussDB][p] implementation of the [R2DBC SPI][r].  This implementation is not intended to be used directly, but rather to be used as the backing implementation for a humane client library to delegate to.
 
 This driver provides the following features:
 
 * Implements R2DBC 1.0
-* Login with username/password (MD5, SASL/SCRAM) or implicit trust
+* Login with username/password
 * Supports credential rotation by providing `Supplier<String>` or `Publisher<String>` 
-* SCRAM authentication
 * Unix Domain Socket transport
 * Connection Fail-over supporting multiple hosts
 * TLS
@@ -18,14 +17,13 @@ This driver provides the following features:
 * Execution of prepared statements with bindings
 * Execution of batch statements without bindings
 * Read and write support for a majority of data types (see [Data Type Mapping](#data-type-mapping) for details)
-* Fetching of `REFCURSOR` using `io.r2dbc.postgresql.api.RefCursor`
-* Extension points to register `Codec`s to handle additional PostgreSQL data types
+* Extension points to register `Codec`s to handle additional GaussDB data types
 
 Next steps:
 
 * Multi-dimensional arrays
 
-[p]: https://www.postgresql.org
+[p]: https://www.huaweicloud.com/product/gaussdb.html
 [r]: https://github.com/r2dbc/r2dbc-spi
 
 ## Code of Conduct
@@ -34,12 +32,12 @@ This project is governed by the [Code of Conduct](.github/CODE_OF_CONDUCT.adoc).
 
 ## Getting Started
 
-Here is a quick teaser of how to use R2DBC PostgreSQL in Java:
+Here is a quick teaser of how to use R2DBC GaussDB in Java:
 
 **URL Connection Factory Discovery**
 
 ```java
-ConnectionFactory connectionFactory = ConnectionFactories.get("r2dbc:postgresql://<host>:5432/<database>");
+ConnectionFactory connectionFactory = ConnectionFactories.get("r2dbc:gaussdb://<host>:5432/<database>");
 
 Publisher<? extends Connection> connectionPublisher = connectionFactory.create();
 ```
@@ -48,11 +46,9 @@ Publisher<? extends Connection> connectionPublisher = connectionFactory.create()
 
 ```java
 Map<String, String> options = new HashMap<>();
-options.put("lock_timeout", "10s");
-options.put("statement_timeout", "5m");
 
 ConnectionFactory connectionFactory = ConnectionFactories.get(ConnectionFactoryOptions.builder()
-   .option(DRIVER, "postgresql")
+   .option(DRIVER, "gaussdb")
    .option(HOST, "...")
    .option(PORT, 5432)  // optional, defaults to 5432
    .option(USER, "...")
@@ -72,7 +68,7 @@ Mono<Connection> connectionMono = Mono.from(connectionFactory.create());
 | Option                          | Description
 |---------------------------------| -----------
 | `ssl`                           | Enables SSL usage (`SSLMode.VERIFY_FULL`).
-| `driver`                        | Must be `postgresql`.
+| `driver`                        | Must be `gaussdb`.
 | `protocol`                      | Protocol specifier. Empty to use single-host operations. Supported: `failover` for multi-server failover operations. _(Optional)_
 | `host`                          | Server hostname to connect to. May contain a comma-separated list of hosts with ports when using the `failover` protocol.
 | `port`                          | Server port to connect to. Defaults to `5432`. _(Optional)_
@@ -113,8 +109,6 @@ Mono<Connection> connectionMono = Mono.from(connectionFactory.create());
 
 ```java
 Map<String, String> options = new HashMap<>();
-options.put("lock_timeout", "10s");
-
 PostgresqlConnectionFactory connectionFactory = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
     .host("...")
     .port(5432)  // optional, defaults to 5432
@@ -127,7 +121,7 @@ PostgresqlConnectionFactory connectionFactory = new PostgresqlConnectionFactory(
 Mono<Connection> mono = connectionFactory.create();
 ```
 
-PostgreSQL uses index parameters that are prefixed with `$`.  The following SQL statement makes use of parameters:
+GaussDB uses index parameters that are prefixed with `$`.  The following SQL statement makes use of parameters:
 
 ```sql
 INSERT INTO person (id, first_name, last_name) VALUES ($1, $2, $3)
@@ -148,12 +142,12 @@ Binding also allowed positional index (zero-based) references.  The parameter in
 
 ### Maven configuration
 
-Artifacts can be found on [Maven Central](https://search.maven.org/search?q=r2dbc-postgresql).
+Artifacts can be found on [Maven Central](https://search.maven.org/search?q=gaussdb-r2dbc).
 
 ```xml
 <dependency>
-  <groupId>org.postgresql</groupId>
-  <artifactId>r2dbc-postgresql</artifactId>
+  <groupId>com.huaweicloud.gaussdb</groupId>
+  <artifactId>gaussdb-r2dbc</artifactId>
   <version>${version}</version>
 </dependency>
 ```
@@ -162,9 +156,9 @@ If you'd rather like the latest snapshots of the upcoming major version, use our
 
 ```xml
 <dependency>
-  <groupId>org.postgresql</groupId>
-  <artifactId>r2dbc-postgresql</artifactId>
-  <version>${version}.BUILD-SNAPSHOT</version>
+  <groupId>com.huaweicloud.gaussdb</groupId>
+  <artifactId>gaussdb-r2dbc</artifactId>
+  <version>${version}.SNAPSHOT</version>
 </dependency>
 
 <repository>
@@ -182,18 +176,18 @@ in order until the connection succeeds. If none succeeds a normal connection exc
 The syntax for the connection url is:
 
 ```
-r2dbc:postgresql:failover://user:foo@host1:5433,host2:5432,host3
+r2dbc:gaussdb:failover://user:foo@host1:5433,host2:5432,host3
 ```
 
 For example an application can create two connection pools. One data source is for writes, another for reads. The write pool limits connections only to a primary node:
 
 ```
-r2dbc:postgresql:failover://user:foo@host1:5433,host2:5432,host3?targetServerType=primary.
+r2dbc:gaussdb:failover://user:foo@host1:5433,host2:5432,host3?targetServerType=primary.
 ```
 
 ## Cursors
 
-R2DBC Postgres supports both, the [simple](https://www.postgresql.org/docs/current/protocol-flow.html#id-1.10.5.7.4)
+R2DBC GaussDB supports both, the [simple](https://www.postgresql.org/docs/current/protocol-flow.html#id-1.10.5.7.4)
 and [extended](https://www.postgresql.org/docs/current/protocol-flow.html#PROTOCOL-FLOW-EXT-QUERY) message flow.
 
 Cursored fetching is activated by configuring a `fetchSize`. Postgres cursors are valid for the duration of a transaction. R2DBC can use cursors in auto-commit mode (`Execute` and `Flush`) to not
@@ -391,7 +385,7 @@ Flux<T> replicationStream = replicationConnection.startReplication(replicationRe
 });
 ```
 
-## Postgres Enum Types
+## GaussDB Enum Types
 
 Applications may make use of Postgres enumerated types by using `EnumCodec` to map custom types to Java `enum` types. 
 `EnumCodec` requires the Postgres OID and the Java to map enum values to the Postgres protocol and to materialize Enum instances from Postgres results. 

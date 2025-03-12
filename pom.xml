@@ -22,14 +22,14 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.postgresql</groupId>
-    <artifactId>r2dbc-postgresql</artifactId>
-    <version>1.1.0.BUILD-SNAPSHOT</version>
+    <groupId>com.huaweicloud.gaussdb</groupId>
+    <artifactId>gaussdb-r2dbc</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Reactive Relational Database Connectivity - Postgresql</name>
-    <description>Reactive Relational Database Connectivity Driver Implementation for Postgresql</description>
-    <url>https://github.com/pgjdbc/r2dbc-postgresql</url>
+    <name>Reactive Relational Database Connectivity - GaussDB</name>
+    <description>Reactive Relational Database Connectivity Driver Implementation for GaussDB</description>
+    <url>https://github.com/HuaweiCloudDeveloper/gaussdb-r2dbc</url>
 
     <properties>
         <assertj.version>3.25.3</assertj.version>
@@ -63,8 +63,8 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:https://github.com/pgjdbc/r2dbc-postgresql</connection>
-        <url>https://github.com/pgjdbc/r2dbc-postgresql</url>
+        <connection>scm:git:https://github.com/HuaweiCloudDeveloper/gaussdb-r2dbc</connection>
+        <url>https://github.com/HuaweiCloudDeveloper/gaussdb-r2dbc</url>
     </scm>
 
     <developers>
@@ -288,7 +288,7 @@
                         </manifest>
                         <manifestEntries>
                             <R2DBC-Specification-Version>${r2dbc-spi.version}</R2DBC-Specification-Version>
-                            <Automatic-Module-Name>r2dbc.postgresql</Automatic-Module-Name>
+                            <Automatic-Module-Name>gaussdb.r2dbc</Automatic-Module-Name>
                         </manifestEntries>
                     </archive>
                 </configuration>
