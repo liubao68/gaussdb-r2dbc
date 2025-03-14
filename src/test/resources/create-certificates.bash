@@ -19,7 +19,7 @@
 
 ##################################################################################
 #
-# Script to generate client and server certificates to run postgresql with SSL enabled
+# Script to generate client and server certificates to run gaussdb with SSL enabled
 #
 ##################################################################################
 

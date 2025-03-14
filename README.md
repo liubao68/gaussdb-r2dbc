@@ -239,7 +239,7 @@ See also: https://www.postgresql.org/docs/current/sql-begin.html
 ## JSON/JSONB support
 
 PostgreSQL supports JSON by storing values in `JSON`/`JSONB` columns. These values can be consumed and written using the regular R2DBC SPI and by using driver-specific extensions with
-the `io.r2dbc.postgresql.codec.Json` type.
+the `io.r2dbc.gaussdb.codec.Json` type.
 
 You can choose from two approaches:
 
@@ -288,7 +288,7 @@ connection.createStatement("SELECT my_json FROM my_table")
 
 The following types are supported for JSON exchange:
 
-* `io.r2dbc.postgresql.codec.Json`
+* `io.r2dbc.gaussdb.codec.Json`
 * `ByteBuf` (must be released after usage to avoid memory leaks)
 * `ByteBuffer`
 * `byte[]`
@@ -581,7 +581,7 @@ This driver accepts the following extensions:
 
 * `CodecRegistrar` to contribute `Codec`s for PostgreSQL ObjectIDs. 
 
-Extensions can be registered programmatically using `PostgresConnectionConfiguration` or discovered using Java's `ServiceLoader` mechanism (from `META-INF/services/io.r2dbc.postgresql.extension.Extension`).
+Extensions can be registered programmatically using `PostgresConnectionConfiguration` or discovered using Java's `ServiceLoader` mechanism (from `META-INF/services/io.r2dbc.gaussdb.extension.Extension`).
 
 The driver ships with built-in dynamic codecs (e.g. `hstore`, PostGIS `geometry`) that are registered during the connection handshake depending on their availability while connecting. Note that Postgres extensions registered after a connection was established require a reconnect to initialize the codec. 
 
@@ -590,10 +590,10 @@ If SL4J is on the classpath, it will be used. Otherwise, there are two possible 
 
 Logging facilities:
 
-* Driver Logging (`io.r2dbc.postgresql`)
-* Query Logging (`io.r2dbc.postgresql.QUERY` on `DEBUG` level)
-* Parameters' values Logging (`io.r2dbc.postgresql.PARAM` on `DEBUG` level)
-* Transport Logging (`io.r2dbc.postgresql.client`)
+* Driver Logging (`io.r2dbc.gaussdb`)
+* Query Logging (`io.r2dbc.gaussdb.QUERY` on `DEBUG` level)
+* Parameters' values Logging (`io.r2dbc.gaussdb.PARAM` on `DEBUG` level)
+* Transport Logging (`io.r2dbc.gaussdb.client`)
     * `DEBUG` enables `Message` exchange logging
     * `TRACE` enables traffic logging
     

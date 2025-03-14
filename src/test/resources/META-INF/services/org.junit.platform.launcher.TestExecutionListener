@@ -1,1 +1,1 @@
-io.r2dbc.postgresql.util.ClosingPgTestExecutionListener
+io.r2dbc.gaussdb.util.ClosingPgTestExecutionListener

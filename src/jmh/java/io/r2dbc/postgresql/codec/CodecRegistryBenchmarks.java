@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package io.r2dbc.postgresql.codec;
+package io.r2dbc.gaussdb.codec;
 
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.UnpooledByteBufAllocator;
-import io.r2dbc.postgresql.BenchmarkSettings;
-import io.r2dbc.postgresql.util.ByteBufUtils;
+import io.r2dbc.gaussdb.BenchmarkSettings;
+import io.r2dbc.gaussdb.util.ByteBufUtils;
 import org.junit.platform.commons.annotation.Testable;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -34,18 +34,18 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.concurrent.TimeUnit;
 
-import static io.r2dbc.postgresql.codec.PostgresqlObjectId.FLOAT4;
-import static io.r2dbc.postgresql.codec.PostgresqlObjectId.FLOAT8;
-import static io.r2dbc.postgresql.codec.PostgresqlObjectId.FLOAT8_ARRAY;
-import static io.r2dbc.postgresql.codec.PostgresqlObjectId.INT2;
-import static io.r2dbc.postgresql.codec.PostgresqlObjectId.INT2_ARRAY;
-import static io.r2dbc.postgresql.codec.PostgresqlObjectId.INT4;
-import static io.r2dbc.postgresql.codec.PostgresqlObjectId.INT4_ARRAY;
-import static io.r2dbc.postgresql.codec.PostgresqlObjectId.TIMESTAMP;
-import static io.r2dbc.postgresql.codec.PostgresqlObjectId.VARCHAR;
-import static io.r2dbc.postgresql.message.Format.FORMAT_BINARY;
-import static io.r2dbc.postgresql.message.Format.FORMAT_TEXT;
-import static io.r2dbc.postgresql.util.TestByteBufAllocator.TEST;
+import static io.r2dbc.gaussdb.codec.PostgresqlObjectId.FLOAT4;
+import static io.r2dbc.gaussdb.codec.PostgresqlObjectId.FLOAT8;
+import static io.r2dbc.gaussdb.codec.PostgresqlObjectId.FLOAT8_ARRAY;
+import static io.r2dbc.gaussdb.codec.PostgresqlObjectId.INT2;
+import static io.r2dbc.gaussdb.codec.PostgresqlObjectId.INT2_ARRAY;
+import static io.r2dbc.gaussdb.codec.PostgresqlObjectId.INT4;
+import static io.r2dbc.gaussdb.codec.PostgresqlObjectId.INT4_ARRAY;
+import static io.r2dbc.gaussdb.codec.PostgresqlObjectId.TIMESTAMP;
+import static io.r2dbc.gaussdb.codec.PostgresqlObjectId.VARCHAR;
+import static io.r2dbc.gaussdb.message.Format.FORMAT_BINARY;
+import static io.r2dbc.gaussdb.message.Format.FORMAT_TEXT;
+import static io.r2dbc.gaussdb.util.TestByteBufAllocator.TEST;
 
 /**
  * Benchmarks for codec encoding and decoding using cached enabled or disabled registries.

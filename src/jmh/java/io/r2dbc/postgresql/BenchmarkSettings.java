@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.r2dbc.postgresql;
+package io.r2dbc.gaussdb;
 
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;

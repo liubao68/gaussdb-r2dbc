@@ -325,7 +325,7 @@
                 <version>3.6.3</version>
                 <configuration>
                     <excludePackageNames>
-                        io.r2dbc.postgresql.authentication,io.r2dbc.postgresql.client,io.r2dbc.postgresql.message,io.r2dbc.postgresql.util
+                        io.r2dbc.gaussdb.authentication,io.r2dbc.gaussdb.client,io.r2dbc.gaussdb.message,io.r2dbc.gaussdb.util
                     </excludePackageNames>
                     <links>
                         <link>https://r2dbc.io/spec/${r2dbc-spi.version}/api/</link>

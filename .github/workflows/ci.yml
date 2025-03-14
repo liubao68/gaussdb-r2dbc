@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    if: github.repository == 'pgjdbc/r2dbc-postgresql'
+    if: github.repository == 'pgjdbc/r2dbc-gaussdb'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.r2dbc.postgresql;
+package io.r2dbc.gaussdb;
 
 import org.junit.platform.commons.annotation.Testable;
 import org.openjdk.jmh.annotations.Benchmark;
