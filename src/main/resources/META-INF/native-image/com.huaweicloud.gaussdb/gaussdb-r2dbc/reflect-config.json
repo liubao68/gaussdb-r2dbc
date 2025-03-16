@@ -1,38 +1,38 @@
 [
   {
-    "name": "[Lio.r2dbc.postgresql.codec.Box;",
+    "name": "[Lio.r2dbc.gaussdb.codec.Box;",
     "unsafeAllocated": true
   },
   {
-    "name": "[Lio.r2dbc.postgresql.codec.Circle;",
+    "name": "[Lio.r2dbc.gaussdb.codec.Circle;",
     "unsafeAllocated": true
   },
   {
-    "name": "[Lio.r2dbc.postgresql.codec.Interval;",
+    "name": "[Lio.r2dbc.gaussdb.codec.Interval;",
     "unsafeAllocated": true
   },
   {
-    "name": "[Lio.r2dbc.postgresql.codec.Line;",
+    "name": "[Lio.r2dbc.gaussdb.codec.Line;",
     "unsafeAllocated": true
   },
   {
-    "name": "[Lio.r2dbc.postgresql.codec.Lseg;",
+    "name": "[Lio.r2dbc.gaussdb.codec.Lseg;",
     "unsafeAllocated": true
   },
   {
-    "name": "[Lio.r2dbc.postgresql.codec.Path;",
+    "name": "[Lio.r2dbc.gaussdb.codec.Path;",
     "unsafeAllocated": true
   },
   {
-    "name": "[Lio.r2dbc.postgresql.codec.Point;",
+    "name": "[Lio.r2dbc.gaussdb.codec.Point;",
     "unsafeAllocated": true
   },
   {
-    "name": "[Lio.r2dbc.postgresql.codec.Polygon;",
+    "name": "[Lio.r2dbc.gaussdb.codec.Polygon;",
     "unsafeAllocated": true
   },
   {
-    "name": "[Lio.r2dbc.postgresql.codec.Vector;",
+    "name": "[Lio.r2dbc.gaussdb.codec.Vector;",
     "unsafeAllocated": true
   },
   {

@@ -71,7 +71,8 @@ public class CodecReflectConfigTests {
     static List<Map<String, Object>> readReflectConfig() {
 
         ObjectMapper mapper = new ObjectMapper();
-        ClassPathResource resource = new ClassPathResource("META-INF/native-image/org.postgresql/r2dbc-postgresql/reflect-config.json");
+        ClassPathResource resource = new ClassPathResource(
+            "META-INF/native-image/com.huaweicloud.gaussdb/gaussdb-r2dbc/reflect-config.json");
 
         try (InputStream is = resource.getInputStream()) {
             return mapper.readValue(is, List.class);

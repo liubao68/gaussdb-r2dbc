@@ -43,7 +43,7 @@ final class StartupMessageUnitTests {
             .isEncodedAs(buffer -> {
                 buffer
                     .writeInt(156 + ZoneId.systemDefault().toString().length())
-                    .writeInt(196608);
+                    .writeInt(196659); // 3， 51
 
                 buffer.writeCharSequence("user", UTF_8);
                 buffer.writeByte(0);
@@ -100,7 +100,7 @@ final class StartupMessageUnitTests {
             .isEncodedAs(buffer -> {
                 buffer
                     .writeInt(133 + ZoneId.systemDefault().toString().length())
-                    .writeInt(196608);
+                    .writeInt(196659);
 
                 buffer.writeCharSequence("user", UTF_8);
                 buffer.writeByte(0);
