@@ -18,7 +18,7 @@ package io.r2dbc.gaussdb.message.frontend;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.r2dbc.gaussdb.message.backend.AuthenticationSHA256Password;
+import io.r2dbc.gaussdb.message.backend.AuthenticationMD5SHA256Password;
 import io.r2dbc.gaussdb.util.Assert;
 import io.r2dbc.gaussdb.util.MD5Digest;
 import org.reactivestreams.Publisher;
@@ -34,21 +34,18 @@ import static io.r2dbc.gaussdb.message.frontend.FrontendMessageUtils.writeInt;
 /**
  * The SHA256PasswordMessage message.
  */
-public final class SHA256PasswordMessage implements FrontendMessage {
+public final class MD5SHA256PasswordMessage implements FrontendMessage {
 
     private final CharSequence password;
 
-    private final String username;
-
-    private final AuthenticationSHA256Password authentication;
+    private final AuthenticationMD5SHA256Password authentication;
 
     /**
      * Create a new message.
      *
      * @throws IllegalArgumentException if {@code password} is {@code null}
      */
-    public SHA256PasswordMessage(String username, CharSequence password, AuthenticationSHA256Password authentication) {
-        this.username = Assert.requireNonNull(username, "username must not be null");
+    public MD5SHA256PasswordMessage(CharSequence password, AuthenticationMD5SHA256Password authentication) {
         this.password = Assert.requireNonNull(password, "password must not be null");
         this.authentication = Assert.requireNonNull(authentication, "authentication must not be null");
     }
@@ -59,22 +56,13 @@ public final class SHA256PasswordMessage implements FrontendMessage {
 
         return Mono.fromSupplier(() -> {
             ByteBuf out = byteBufAllocator.ioBuffer();
-            byte[] result;
-            if (AuthenticationSHA256Password.SHA256_PASSWORD == authentication.getPasswordStoredMethod() ||
-                AuthenticationSHA256Password.PLAIN_PASSWORD == authentication.getPasswordStoredMethod()) {
-                String randomCode = new String(authentication.getRandomCode().array(), StandardCharsets.UTF_8);
-                String token = new String(authentication.getToken().array(), StandardCharsets.UTF_8);
-                int iteration = authentication.getIteration().getInt();
-                result = MD5Digest.RFC5802Algorithm(String.valueOf(this.password), randomCode, token, iteration);
-            } else {
-                byte[] salt = authentication.getMd5Salt().array();
-                result = MD5Digest.SHA256_MD5encode(username.getBytes(StandardCharsets.UTF_8),
-                    String.valueOf(this.password).getBytes(StandardCharsets.UTF_8), salt);
-            }
+            String randomCode = new String(authentication.getRandomCode().array(), StandardCharsets.UTF_8);
+            byte[] result = MD5Digest.MD5_SHA256encode(String.valueOf(password), randomCode, authentication.getMd5Salt().array());
             writeByte(out, 'p');
             writeInt(out, 4 + result.length + 1);
             writeBytes(out, ByteBuffer.wrap(result));
             return writeByte(out, 0);
         });
     }
+
 }

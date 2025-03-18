@@ -112,6 +112,8 @@ public final class BackendMessageDecoder {
                 return AuthenticationSCMCredential.INSTANCE;
             case SHA256_PASSWORD:
                 return AuthenticationSHA256Password.decode(in);
+            case MD5_SHA256_PASSWORD:
+                return AuthenticationMD5SHA256Password.decode(in);
             case SSPI:
                 return AuthenticationSSPI.INSTANCE;
             default:
@@ -129,7 +131,7 @@ public final class BackendMessageDecoder {
         MD5_PASSWORD(5),
         SCMC_CREDENTIAL(6),
         SHA256_PASSWORD(10),
-        SASL_CONTINUE(11),
+        MD5_SHA256_PASSWORD(11),
         SASL_FINAL(12),
         SSPI(9);
 

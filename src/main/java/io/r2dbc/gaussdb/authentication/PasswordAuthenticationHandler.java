@@ -18,9 +18,11 @@ package io.r2dbc.gaussdb.authentication;
 
 import io.r2dbc.gaussdb.message.backend.AuthenticationCleartextPassword;
 import io.r2dbc.gaussdb.message.backend.AuthenticationMD5Password;
+import io.r2dbc.gaussdb.message.backend.AuthenticationMD5SHA256Password;
 import io.r2dbc.gaussdb.message.backend.AuthenticationMessage;
 import io.r2dbc.gaussdb.message.backend.AuthenticationSHA256Password;
 import io.r2dbc.gaussdb.message.frontend.FrontendMessage;
+import io.r2dbc.gaussdb.message.frontend.MD5SHA256PasswordMessage;
 import io.r2dbc.gaussdb.message.frontend.PasswordMessage;
 import io.r2dbc.gaussdb.message.frontend.SHA256PasswordMessage;
 import io.r2dbc.gaussdb.util.Assert;
@@ -58,7 +60,8 @@ public final class PasswordAuthenticationHandler implements AuthenticationHandle
 
         return message instanceof AuthenticationCleartextPassword
             || message instanceof AuthenticationMD5Password
-            || message instanceof AuthenticationSHA256Password;
+            || message instanceof AuthenticationSHA256Password
+            || message instanceof AuthenticationMD5SHA256Password;
     }
 
     @Override
@@ -71,12 +74,18 @@ public final class PasswordAuthenticationHandler implements AuthenticationHandle
             return handleAuthenticationMD5Password((AuthenticationMD5Password) message);
         } else if (message instanceof AuthenticationSHA256Password) {
             return handleAuthenticationSHA256Password((AuthenticationSHA256Password) message);
+        } else if (message instanceof AuthenticationMD5SHA256Password) {
+          return handleAuthenticationMD5SHA256Password((AuthenticationMD5SHA256Password) message);
         } else {
             throw new IllegalArgumentException(String.format("Cannot handle %s message", message.getClass().getSimpleName()));
         }
     }
 
-  private FrontendMessage handleAuthenticationSHA256Password(AuthenticationSHA256Password message) {
+    private FrontendMessage handleAuthenticationMD5SHA256Password(AuthenticationMD5SHA256Password message) {
+        return new MD5SHA256PasswordMessage(this.password, message);
+    }
+
+    private FrontendMessage handleAuthenticationSHA256Password(AuthenticationSHA256Password message) {
       return new SHA256PasswordMessage(this.username, this.password, message);
   }
 
