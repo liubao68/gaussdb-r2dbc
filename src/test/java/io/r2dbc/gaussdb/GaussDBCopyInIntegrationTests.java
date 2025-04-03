@@ -152,7 +152,7 @@ class GaussDBCopyInIntegrationTests extends AbstractIntegrationTests {
 
         Flux<ByteBuf> data = Flux.just(byteBuf("something,something-invalid\n"));
 
-        verifyCopyInFailed(sql, data, "invalid input syntax for type timestamp: \"something-invalid\"");
+        verifyCopyInFailed(sql, data, "The input syntax of type timestamp: \"something-invalid\" is invalid.");
     }
 
     private void verifyCopyInFailed(String sql, Flux<ByteBuf> data, String message) {
