@@ -38,54 +38,55 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 final class PostgresNotificationIntegrationTests extends AbstractIntegrationTests {
 
-    @Test
-    void shouldReceivePubSubNotifications() throws Exception {
-
-        BlockingQueue<Notification> notifications = new LinkedBlockingQueue<>();
-
-        CountDownLatch await = new CountDownLatch(1);
-        Disposable listener = this.connectionFactory.create().flatMapMany(it -> {
-            return it.createStatement("LISTEN mymessage").execute().flatMap(GaussDBResult::getRowsUpdated).doOnComplete(await::countDown)
-                .thenMany(it.getNotifications()).doOnCancel(() -> it.close().subscribe());
-        }).doOnNext(notifications::add).subscribe();
-
-        await.await(10, TimeUnit.SECONDS);
-
-        this.connectionFactory.create().flatMapMany(it -> it.createStatement("NOTIFY mymessage, 'Mötorhead'").execute().flatMap(GaussDBResult::getRowsUpdated).thenMany(it.close()))
-            .as(StepVerifier::create).verifyComplete();
-
-        Notification notification = notifications.poll(10, TimeUnit.SECONDS);
-
-        assertThat(notification).isNotNull();
-        assertThat(notification.getName()).isEqualTo("mymessage");
-        assertThat(notification.getProcessId()).isNotZero();
-        assertThat(notification.getParameter()).isEqualTo("Mötorhead");
-
-        listener.dispose();
-    }
-
-    @Test
-    void listenShouldCompleteOnConnectionClose() {
-
-        GaussDBConnection connection = this.connectionFactory.create().block();
-
-        connection.getNotifications().as(StepVerifier::create).expectSubscription()
-            .then(() -> connection.close().subscribe())
-            .verifyComplete();
-    }
-
-    @Test
-    void listenShouldFailOnConnectionDisconnected() {
-
-        GaussDBConnection connection = this.connectionFactory.create().block();
-
-        connection.getNotifications().as(StepVerifier::create).expectSubscription()
-            .then(() -> {
-
-                Channel channel = ConnectionIntrospector.of(connection).getChannel();
-                channel.close();
-            })
-            .verifyError(R2dbcNonTransientResourceException.class);
-    }
+    // TODO: GaussDB do not support Notification yet
+//    @Test
+//    void shouldReceivePubSubNotifications() throws Exception {
+//
+//        BlockingQueue<Notification> notifications = new LinkedBlockingQueue<>();
+//
+//        CountDownLatch await = new CountDownLatch(1);
+//        Disposable listener = this.connectionFactory.create().flatMapMany(it -> {
+//            return it.createStatement("LISTEN mymessage").execute().flatMap(GaussDBResult::getRowsUpdated).doOnComplete(await::countDown)
+//                .thenMany(it.getNotifications()).doOnCancel(() -> it.close().subscribe());
+//        }).doOnNext(notifications::add).subscribe();
+//
+//        await.await(10, TimeUnit.SECONDS);
+//
+//        this.connectionFactory.create().flatMapMany(it -> it.createStatement("NOTIFY mymessage, 'Mötorhead'").execute().flatMap(GaussDBResult::getRowsUpdated).thenMany(it.close()))
+//            .as(StepVerifier::create).verifyComplete();
+//
+//        Notification notification = notifications.poll(10, TimeUnit.SECONDS);
+//
+//        assertThat(notification).isNotNull();
+//        assertThat(notification.getName()).isEqualTo("mymessage");
+//        assertThat(notification.getProcessId()).isNotZero();
+//        assertThat(notification.getParameter()).isEqualTo("Mötorhead");
+//
+//        listener.dispose();
+//    }
+//
+//    @Test
+//    void listenShouldCompleteOnConnectionClose() {
+//
+//        GaussDBConnection connection = this.connectionFactory.create().block();
+//
+//        connection.getNotifications().as(StepVerifier::create).expectSubscription()
+//            .then(() -> connection.close().subscribe())
+//            .verifyComplete();
+//    }
+//
+//    @Test
+//    void listenShouldFailOnConnectionDisconnected() {
+//
+//        GaussDBConnection connection = this.connectionFactory.create().block();
+//
+//        connection.getNotifications().as(StepVerifier::create).expectSubscription()
+//            .then(() -> {
+//
+//                Channel channel = ConnectionIntrospector.of(connection).getChannel();
+//                channel.close();
+//            })
+//            .verifyError(R2dbcNonTransientResourceException.class);
+//    }
 
 }
