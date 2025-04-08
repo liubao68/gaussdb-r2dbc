@@ -26,12 +26,10 @@ import io.r2dbc.gaussdb.codec.Circle;
 import io.r2dbc.gaussdb.codec.EnumCodec;
 import io.r2dbc.gaussdb.codec.GaussDBObjectId;
 import io.r2dbc.gaussdb.codec.Json;
-import io.r2dbc.gaussdb.codec.Line;
 import io.r2dbc.gaussdb.codec.Lseg;
 import io.r2dbc.gaussdb.codec.Path;
 import io.r2dbc.gaussdb.codec.Point;
 import io.r2dbc.gaussdb.codec.Polygon;
-import io.r2dbc.gaussdb.codec.Vector;
 import io.r2dbc.spi.Blob;
 import io.r2dbc.spi.Clob;
 import io.r2dbc.spi.Connection;
@@ -70,9 +68,6 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -80,7 +75,6 @@ import java.util.function.Function;
 
 import static io.r2dbc.gaussdb.util.TestByteBufAllocator.TEST;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assumptions.assumeThat;
 
 /**
  * Integrations tests for our built-in codecs.
@@ -311,15 +305,16 @@ abstract class AbstractCodecIntegrationTests extends AbstractIntegrationTests {
         testCodec(Float[][].class, new Float[][]{{100.5f, 200.25f}, {300.125f, null}}, "FLOAT4[][]");
     }
 
-    @Test
-    void hstore() {
-        SERVER.getJdbcOperations().execute("CREATE EXTENSION IF NOT EXISTS hstore");
-        Map<String, String> hstore = new LinkedHashMap<>();
-        hstore.put("hello", "world");
-        hstore.put("key\"with quote", "value\" with quote");
-        hstore.put("null-value", null);
-        testCodec(Map.class, hstore, "HSTORE");
-    }
+    // Extension is not a secure feature，GaussDB disabled by default
+//    @Test
+//    void hstore() {
+//        SERVER.getJdbcOperations().execute("CREATE EXTENSION IF NOT EXISTS hstore");
+//        Map<String, String> hstore = new LinkedHashMap<>();
+//        hstore.put("hello", "world");
+//        hstore.put("key\"with quote", "value\" with quote");
+//        hstore.put("null-value", null);
+//        testCodec(Map.class, hstore, "HSTORE");
+//    }
 
     @Test
     void inetAddress() throws UnknownHostException {
@@ -377,36 +372,37 @@ abstract class AbstractCodecIntegrationTests extends AbstractIntegrationTests {
         testCodec(String.class, "{\"hello\": \"world\"}", "JSON", "$1::json");
 
         testCodec(String.class, "{\"hello\": \"world\"}", "JSON", GaussDBObjectId.JSON);
-
-        testCodec(Json.class, Json.of("{\"hello\": \"world\"}"), (actual, expected) -> assertThat(actual.asString()).isEqualTo(("{\"hello\": \"world\"}")), "JSON");
-        testCodec(Json.class, Json.of("{\"hello\": \"world\"}".getBytes()), (actual, expected) -> assertThat(actual.asString()).isEqualTo(("{\"hello\": \"world\"}")), "JSON");
-        testCodec(Json.class, Json.of(ByteBuffer.wrap("{\"hello\": \"world\"}".getBytes())), (actual, expected) -> assertThat(actual.asString()).isEqualTo(("{\"hello\": \"world\"}")), "JSON");
-        testCodec(Json.class, Json.of(Unpooled.wrappedBuffer("{\"hello\": \"world\"}".getBytes())), (actual, expected) -> assertThat(actual.asString()).isEqualTo(("{\"hello\": \"world\"}")), "JSON");
-        testCodec(Json.class, Json.of(new ByteBufInputStream(Unpooled.wrappedBuffer("{\"hello\": \"world\"}".getBytes()), true)), (actual, expected) -> assertThat(actual.asString()).isEqualTo((
-            "{\"hello\": \"world\"}")), "JSON");
-
-        testCodecReadAs(Json.of("{\"hello\": \"world\"}"), String.class, "{\"hello\": \"world\"}", "JSON");
-        testCodecReadAs(Json.of("{\"hello\": \"world\"}"), byte[].class, "{\"hello\": \"world\"}".getBytes(), "JSON");
-        testCodecReadAs(Json.of("{\"hello\": \"world\"}"), ByteBuffer.class, ByteBuffer.wrap("{\"hello\": \"world\"}".getBytes()), "JSON");
-        testCodecReadAs(Json.of("{\"hello\": \"world\"}"), ByteBuf.class, (Consumer<ByteBuf>) actual -> {
-
-            assertThat(actual).isEqualTo(Unpooled.wrappedBuffer("{\"hello\": \"world\"}".getBytes()));
-            actual.release();
-
-        }, "JSON");
-        testCodecReadAs(Json.of("{\"hello\": \"world\"}"), InputStream.class, (Consumer<InputStream>) actual -> {
-            try {
-                assertThat(StreamUtils.copyToByteArray(actual)).isEqualTo("{\"hello\": \"world\"}".getBytes());
-                actual.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }, "JSON");
+// TODO： GaussDB not support jsonb->json https://bbs.huaweicloud.com/forum/thread-0211179461468355165-1-1.html
+//        testCodec(Json.class, Json.of("{\"hello\": \"world\"}"), (actual, expected) -> assertThat(actual.asString()).isEqualTo(("{\"hello\": \"world\"}")), "JSON");
+//        testCodec(Json.class, Json.of("{\"hello\": \"world\"}".getBytes()), (actual, expected) -> assertThat(actual.asString()).isEqualTo(("{\"hello\": \"world\"}")), "JSON");
+//        testCodec(Json.class, Json.of(ByteBuffer.wrap("{\"hello\": \"world\"}".getBytes())), (actual, expected) -> assertThat(actual.asString()).isEqualTo(("{\"hello\": \"world\"}")), "JSON");
+//        testCodec(Json.class, Json.of(Unpooled.wrappedBuffer("{\"hello\": \"world\"}".getBytes())), (actual, expected) -> assertThat(actual.asString()).isEqualTo(("{\"hello\": \"world\"}")), "JSON");
+//        testCodec(Json.class, Json.of(new ByteBufInputStream(Unpooled.wrappedBuffer("{\"hello\": \"world\"}".getBytes()), true)), (actual, expected) -> assertThat(actual.asString()).isEqualTo((
+//            "{\"hello\": \"world\"}")), "JSON");
+//
+//        testCodecReadAs(Json.of("{\"hello\": \"world\"}"), String.class, "{\"hello\": \"world\"}", "JSON");
+//        testCodecReadAs(Json.of("{\"hello\": \"world\"}"), byte[].class, "{\"hello\": \"world\"}".getBytes(), "JSON");
+//        testCodecReadAs(Json.of("{\"hello\": \"world\"}"), ByteBuffer.class, ByteBuffer.wrap("{\"hello\": \"world\"}".getBytes()), "JSON");
+//        testCodecReadAs(Json.of("{\"hello\": \"world\"}"), ByteBuf.class, (Consumer<ByteBuf>) actual -> {
+//
+//            assertThat(actual).isEqualTo(Unpooled.wrappedBuffer("{\"hello\": \"world\"}".getBytes()));
+//            actual.release();
+//
+//        }, "JSON");
+//        testCodecReadAs(Json.of("{\"hello\": \"world\"}"), InputStream.class, (Consumer<InputStream>) actual -> {
+//            try {
+//                assertThat(StreamUtils.copyToByteArray(actual)).isEqualTo("{\"hello\": \"world\"}".getBytes());
+//                actual.close();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }, "JSON");
     }
 
     @Test
     void jsonb() {
-        testCodec(String.class, "{\"hello\": \"world\"}", "JSONB", "$1::json");
+        // TODO： GaussDB not support json->jsonb https://bbs.huaweicloud.com/forum/thread-0211179461468355165-1-1.html
+//        testCodec(String.class, "{\"hello\": \"world\"}", "JSONB", "$1::json");
 
         testCodec(Json.class, Json.of("{\"hello\": \"world\"}"), (actual, expected) -> assertThat(actual.asString()).isEqualTo(("{\"hello\": \"world\"}")), "JSONB");
         testCodec(Json.class, Json.of("{\"hello\": \"world\"}".getBytes()), (actual, expected) -> assertThat(actual.asString()).isEqualTo(("{\"hello\": \"world\"}")), "JSONB");
@@ -630,21 +626,24 @@ abstract class AbstractCodecIntegrationTests extends AbstractIntegrationTests {
         testCodec(Box[][].class, new Box[][]{{null, Box.of(Point.of(1.9, 2.8), Point.of(3.7, 4.6))}, {Box.of(Point.of(1.5, 3.3), Point.of(5., 7.)), null}}, "BOX[][]");
     }
 
-    @Test
-    void lineArray() {
-        testCodec(Line[].class, new Line[]{Line.of(1., 2., 4.), Line.of(-10.42, 3.14, 5.24)}, "LINE[]");
-    }
+    // GaussDB does not have line time yet
+//    @Test
+//    void lineArray() {
+//        testCodec(Line[].class, new Line[]{Line.of(1., 2., 4.), Line.of(-10.42, 3.14, 5.24)}, "LINE[]");
+//    }
 
-    @Test
-    void line() {
-        testCodec(Line.class, Line.of(1., 2., 4.), "LINE");
-        testCodec(Line.class, Line.of(-10.42, 3.14, 5.24), "LINE");
-    }
+    // GaussDB does not have line time yet
+//    @Test
+//    void line() {
+//        testCodec(Line.class, Line.of(1., 2., 4.), "LINE");
+//        testCodec(Line.class, Line.of(-10.42, 3.14, 5.24), "LINE");
+//    }
 
-    @Test
-    void lineTwoDimensionalArray() {
-        testCodec(Line[][].class, new Line[][]{{Line.of(1., 2., 4.), Line.of(-10.42, 3.14, 5.24)}, {null, Line.of(3, 4, 5)}}, "LINE[][]");
-    }
+    // GaussDB does not have line time yet
+//    @Test
+//    void lineTwoDimensionalArray() {
+//        testCodec(Line[][].class, new Line[][]{{Line.of(1., 2., 4.), Line.of(-10.42, 3.14, 5.24)}, {null, Line.of(3, 4, 5)}}, "LINE[][]");
+//    }
 
     @Test
     void lsegArray() {
@@ -701,15 +700,16 @@ abstract class AbstractCodecIntegrationTests extends AbstractIntegrationTests {
             Point.of(.42, 5.3), Point.of(-3.5, 0.)), null}}, "POLYGON[][]");
     }
 
-    @Test
-    void vector() {
-
-        List<Map<String, Object>> extensions = SERVER.getJdbcOperations().queryForList("select * from pg_available_extensions() where name = 'vector'");
-        assumeThat(extensions).isNotEmpty();
-
-        SERVER.getJdbcOperations().execute("CREATE EXTENSION IF NOT EXISTS vector");
-        testCodec(Vector.class, Vector.of(1, 2.2f, 3), "VECTOR");
-    }
+    // Extension is not a secure feature，GaussDB disabled by default
+//    @Test
+//    void vector() {
+//
+//        List<Map<String, Object>> extensions = SERVER.getJdbcOperations().queryForList("select * from pg_available_extensions() where name = 'vector'");
+//        assumeThat(extensions).isNotEmpty();
+//
+//        SERVER.getJdbcOperations().execute("CREATE EXTENSION IF NOT EXISTS vector");
+//        testCodec(Vector.class, Vector.of(1, 2.2f, 3), "VECTOR");
+//    }
 
     private static <T> Mono<T> close(Connection connection) {
         return Mono.from(connection.close()).then(Mono.empty());
