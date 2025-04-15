@@ -88,6 +88,7 @@ abstract class AbstractCodecIntegrationTests extends AbstractIntegrationTests {
     @Override
     protected void customize(GaussDBConnectionConfiguration.Builder builder) {
         try {
+            SERVER.getJdbcOperations().execute("DROP  TYPE IF EXISTS my_enum");
             SERVER.getJdbcOperations().execute("CREATE TYPE my_enum AS ENUM ('HELLO', 'WORLD')");
         } catch (DataAccessException e) {
             // ignore duplicate types

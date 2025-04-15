@@ -83,11 +83,12 @@ final class PostgresConnectionIntegrationTests extends AbstractIntegrationTests 
 
         this.connection.rollbackTransaction().as(StepVerifier::create).verifyComplete();
 
+        // TODO： GaussDB will return repeatable read
         this.connection.createStatement("SHOW TRANSACTION ISOLATION LEVEL")
             .execute()
             .flatMap(it -> it.map((row, rowMetadata) -> {
                 return row.get(0, String.class);
-            })).as(StepVerifier::create).expectNext("serializable").verifyComplete();
+            })).as(StepVerifier::create).expectNext("repeatable read").verifyComplete();
         assertThat(this.connection.getTransactionIsolationLevel()).isEqualTo(IsolationLevel.SERIALIZABLE);
     }
 

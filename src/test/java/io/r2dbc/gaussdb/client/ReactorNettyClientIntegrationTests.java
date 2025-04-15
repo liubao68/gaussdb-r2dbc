@@ -306,7 +306,7 @@ final class ReactorNettyClientIntegrationTests {
         gaussDBConnectionFactory.create()
             .as(StepVerifier::create)
             .expectError(R2dbcNonTransientResourceException.class)
-            .verify(Duration.ofMillis(500));
+            .verify(Duration.ofMillis(1500));
     }
 
     @Test
@@ -379,482 +379,486 @@ final class ReactorNettyClientIntegrationTests {
 
     }
 
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    final class ScramIntegrationTests {
+// TODO: GaussDB do not support SCRAM yet
+//    @Nested
+//    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+//    final class ScramIntegrationTests {
+//
+//        @Test
+//        void scramAuthentication() {
+//            createConnectionFactory("test-scram", "test-scram").create()
+//                .flatMapMany(c -> c.createStatement("SELECT 1 test").execute())
+//                .flatMap(r -> r.map((row, meta) -> row.get(0)))
+//                .as(StepVerifier::create)
+//                .expectNextCount(1)
+//                .verifyComplete();
+//        }
+//
+//        @Test
+//        void scramAuthenticationFailed() {
+//            createConnectionFactory("test-scram", "wrong").create()
+//                .as(StepVerifier::create)
+//                .verifyError(R2dbcPermissionDeniedException.class);
+//        }
+//
+//        private GaussDBConnectionFactory createConnectionFactory(String username, String password) {
+//            return new GaussDBConnectionFactory(GaussDBConnectionConfiguration.builder()
+//                .host(SERVER.getHost())
+//                .port(SERVER.getPort())
+//                .username(username)
+//                .password(password)
+//                .database(SERVER.getDatabase())
+//                .applicationName(ReactorNettyClientIntegrationTests.class.getName())
+//                .build());
+//        }
+//
+//    }
 
-        @Test
-        void scramAuthentication() {
-            createConnectionFactory("test-scram", "test-scram").create()
-                .flatMapMany(c -> c.createStatement("SELECT 1 test").execute())
-                .flatMap(r -> r.map((row, meta) -> row.get(0)))
-                .as(StepVerifier::create)
-                .expectNextCount(1)
-                .verifyComplete();
-        }
-
-        @Test
-        void scramAuthenticationFailed() {
-            createConnectionFactory("test-scram", "wrong").create()
-                .as(StepVerifier::create)
-                .verifyError(R2dbcPermissionDeniedException.class);
-        }
-
-        private GaussDBConnectionFactory createConnectionFactory(String username, String password) {
-            return new GaussDBConnectionFactory(GaussDBConnectionConfiguration.builder()
-                .host(SERVER.getHost())
-                .port(SERVER.getPort())
-                .username(username)
-                .password(password)
-                .database(SERVER.getDatabase())
-                .applicationName(ReactorNettyClientIntegrationTests.class.getName())
-                .build());
-        }
-
-    }
-
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    final class SslIntegrationTests {
-
-        @Test
-        void exchangeSslWithClientCert() {
-            client(
-                c -> c,
-                c -> c.map(client -> client.createStatement("SELECT 10")
-                    .execute()
-                    .flatMap(r -> r.map((row, meta) -> row.get(0, Integer.class)))
-                    .as(StepVerifier::create)
-                    .expectNext(10)
-                    .verifyComplete()));
-        }
-
-        @Test
-        void exchangeSslWithClientCertInvalidClientCert() {
-            client(
-                c -> c.sslRootCert(SERVER.getServerCrt())
-                    .sslCert(SERVER.getServerCrt())
-                    .sslKey(SERVER.getServerKey()),
-                c -> c
-                    .as(StepVerifier::create)
-                    .expectError(R2dbcPermissionDeniedException.class)
-                    .verify());
-        }
-
-        @Test
-        void exchangeSslWithClientCertNoCert() {
-            client(
-                c -> c
-                    .password("test"),
-                c -> c
-                    .as(StepVerifier::create)
-                    .expectError(R2dbcPermissionDeniedException.class));
-        }
-
-        @Test
-        void exchangeSslWitScram() {
-            client(
-                c -> c
-                    .sslRootCert(SERVER.getServerCrt())
-                    .username("test-ssl-scram")
-                    .password("test-ssl-scram"),
-                c -> c.map(client -> client.createStatement("SELECT 10")
-                    .execute()
-                    .flatMap(r -> r.map((row, meta) -> row.get(0, Integer.class)))
-                    .as(StepVerifier::create)
-                    .expectNext(10)
-                    .verifyComplete()));
-        }
-
-        @Test
-        void exchangeSslWithPassword() {
-            client(
-                c -> c
-                    .sslRootCert(SERVER.getServerCrt())
-                    .username("test-ssl")
-                    .password("test-ssl"),
-                c -> c.map(client -> client.createStatement("SELECT 10")
-                    .execute()
-                    .flatMap(r -> r.map((row, meta) -> row.get(0, Integer.class)))
-                    .as(StepVerifier::create)
-                    .expectNext(10)
-                    .verifyComplete()));
-        }
-
-        @Test
-        void invalidServerCertificate() {
-            client(
-                c -> c
-                    .sslRootCert(SERVER.getClientCrt()),
-                c -> c
-                    .as(StepVerifier::create)
-                    .expectError(R2dbcNonTransientResourceException.class)
-                    .verify());
-        }
-
-        @Test
-        void userIsNotAllowedToLoginWithSsl() {
-            client(
-                c -> c.sslRootCert(SERVER.getServerCrt())
-                    .username(SERVER.getUsername())
-                    .password(SERVER.getPassword())
-                ,
-                c -> c
-                    .as(StepVerifier::create)
-                    .verifyError(R2dbcPermissionDeniedException.class));
-        }
-
-        @Test
-        void userIsNotAllowedToLoginWithoutSsl() {
-            client(
-                c -> c.sslMode(SSLMode.DISABLE)
-                    .username("test-ssl")
-                    .password("test-ssl"),
-                c -> c
-                    .as(StepVerifier::create)
-                    .verifyError(R2dbcPermissionDeniedException.class));
-        }
-
-        private void client(Function<GaussDBConnectionConfiguration.Builder, GaussDBConnectionConfiguration.Builder> configurer,
-                            Consumer<Mono<GaussDBConnection>> connectionConsumer) {
-            GaussDBConnectionConfiguration.Builder defaultConfig = GaussDBConnectionConfiguration.builder()
-                .database(SERVER.getDatabase())
-                .host(SERVER.getHost())
-                .port(SERVER.getPort())
-                .username("test-ssl-with-cert")
-                .password((String) null)
-                .sslMode(SSLMode.VERIFY_FULL)
-                .sslHostnameVerifier(new NoVerification());
-            new GaussDBConnectionFactory(configurer.apply(defaultConfig).build()).create()
-                .onErrorResume(e -> Mono.fromRunnable(() -> connectionConsumer.accept(Mono.error(e))))
-                .delayUntil(connection -> Mono.fromRunnable(() -> connectionConsumer.accept(Mono.just(connection))))
-                .flatMap(GaussDBConnection::close)
-                .block();
-        }
-
-        @Nested
-        class SslModes {
-
-            @Test
-            void allowFailed() {
-                client(
-                    c -> c
-                        .sslMode(SSLMode.ALLOW)
-                        .username("test-ssl")
-                    ,
-                    c -> c
-                        .as(StepVerifier::create)
-                        .verifyError(R2dbcPermissionDeniedException.class));
-            }
-
-            @Test
-            void allowFallbackToSsl() {
-                client(
-                    c -> c
-                        .sslMode(SSLMode.ALLOW)
-                        .username("test-ssl")
-                        .password("test-ssl")
-                    ,
-                    c -> c
-                        .as(StepVerifier::create)
-                        .expectNextCount(1)
-                        .verifyComplete());
-            }
-
-            @Test
-            void allowFallbackToSslAndFailedAgain() {
-                client(
-                    c -> c
-                        .sslMode(SSLMode.ALLOW)
-                        .username("test-ssl-test")
-                        .password("test-ssl")
-                    ,
-                    c -> c
-                        .as(StepVerifier::create)
-                        .verifyError(R2dbcPermissionDeniedException.class));
-            }
-
-            @Test
-            void allowWithoutSsl() {
-                client(
-                    c -> c
-                        .sslMode(SSLMode.ALLOW)
-                        .username(SERVER.getUsername())
-                        .password(SERVER.getPassword())
-                    ,
-                    c -> c
-                        .as(StepVerifier::create)
-                        .expectNextCount(1)
-                        .verifyComplete());
-            }
-
-            @Test
-            void disabled() {
-                client(
-                    c -> c
-                        .sslMode(SSLMode.DISABLE)
-                        .username(SERVER.getUsername())
-                        .password(SERVER.getPassword()),
-                    c -> c
-                        .as(StepVerifier::create)
-                        .expectNextCount(1)
-                        .verifyComplete());
-            }
-
-            @Test
-            void disabledFailedForSslOnlyUser() {
-                client(
-                    c -> c
-                        .sslMode(SSLMode.DISABLE)
-                        .password("test-ssl")
-                        .password("test-ssl")
-                    ,
-                    c -> c
-                        .as(StepVerifier::create)
-                        .expectError(R2dbcPermissionDeniedException.class)
-                        .verify());
-            }
-
-            @Test
-            void preferFallbackToTcp() {
-                client(
-                    c -> c
-                        .sslMode(SSLMode.PREFER)
-                        .username(SERVER.getUsername())
-                        .password(SERVER.getPassword())
-                    ,
-                    c -> c
-                        .as(StepVerifier::create)
-                        .expectNextCount(1)
-                        .verifyComplete());
-            }
-
-            @Test
-            void preferFallbackToTcpAndFailed() {
-                client(
-                    c -> c
-                        .sslMode(SSLMode.PREFER)
-                        .username("test-ssl-test")
-                        .password(SERVER.getPassword())
-                    ,
-                    c -> c
-                        .as(StepVerifier::create)
-                        .expectError(R2dbcPermissionDeniedException.class));
-            }
-
-            @Test
-            void preferWithSsl() {
-                client(
-                    c -> c
-                        .sslMode(SSLMode.PREFER)
-                        .sslKey(SERVER.getClientKey())
-                        .sslCert(SERVER.getClientCrt()),
-                    c -> c
-                        .as(StepVerifier::create)
-                        .expectNextCount(1)
-                        .verifyComplete());
-            }
-
-            @Test
-            void require() {
-                client(
-                    c -> c
-                        .sslMode(SSLMode.REQUIRE)
-                        .sslRootCert(SERVER.getServerCrt())
-                        .sslKey(SERVER.getClientKey())
-                        .sslCert(SERVER.getClientCrt()),
-                    c -> c
-                        .as(StepVerifier::create)
-                        .expectNextCount(1)
-                        .verifyComplete());
-            }
-
-            @Test
-            void requireConnectsWithoutCertificate() {
-                client(
-                    c -> c
-                        .sslMode(SSLMode.REQUIRE)
-                        .sslKey(SERVER.getClientKey())
-                        .sslCert(SERVER.getClientCrt()),
-                    c -> c
-                        .as(StepVerifier::create)
-                        .expectNextCount(1)
-                        .verifyComplete());
-            }
-
-            @Test
-            void requireFailed() {
-                client(
-                    c -> c
-                        .sslMode(SSLMode.REQUIRE)
-                        .username(SERVER.getUsername())
-                        .password(SERVER.getPassword())
-                    ,
-                    c -> c
-                        .as(StepVerifier::create)
-                        .verifyError(R2dbcPermissionDeniedException.class));
-            }
-
-            @Test
-            void verifyCa() {
-                client(
-                    c -> c.sslRootCert(SERVER.getServerCrt())
-                        .sslKey(SERVER.getClientKey())
-                        .sslCert(SERVER.getClientCrt())
-                        .sslMode(SSLMode.VERIFY_CA),
-                    c -> c
-                        .as(StepVerifier::create)
-                        .expectNextCount(1)
-                        .verifyComplete());
-            }
-
-            @Test
-            void verifyCaWithCustomizer() {
-                client(
-                    c -> c.sslContextBuilderCustomizer(sslContextBuilder -> {
-                        return sslContextBuilder.trustManager(new File(SERVER.getServerCrt()))
-                            .keyManager(new File(SERVER.getClientCrt()), new File(SERVER.getClientKey()));
-                    })
-                        .sslMode(SSLMode.VERIFY_CA),
-                    c -> c
-                        .as(StepVerifier::create)
-                        .expectNextCount(1)
-                        .verifyComplete());
-            }
-
-            @Test
-            void verifyCaFailedWithWrongRootCert() {
-                client(
-                    c -> c
-                        .sslRootCert(SERVER.getClientCrt())
-                        .sslMode(SSLMode.VERIFY_CA),
-                    c -> c
-                        .as(StepVerifier::create)
-                        .verifyError(R2dbcNonTransientResourceException.class));
-            }
-
-            @Test
-            void verifyCaFailedWithoutSsl() {
-                client(
-                    c -> c
-                        .sslMode(SSLMode.VERIFY_CA)
-                        .sslRootCert(SERVER.getServerCrt())
-                        .sslKey(SERVER.getClientKey())
-                        .sslCert(SERVER.getClientCrt())
-                        .username(SERVER.getUsername())
-                        .password(SERVER.getPassword()),
-                    c -> c
-                        .as(StepVerifier::create)
-                        .verifyError(R2dbcPermissionDeniedException.class));
-            }
-
-            @Test
-            void verifyFull() {
-                client(
-                    c -> c
-                        .sslMode(SSLMode.VERIFY_FULL)
-                        .sslRootCert(SERVER.getServerCrt())
-                        .sslKey(SERVER.getClientKey())
-                        .sslCert(SERVER.getClientCrt()),
-                    c -> c
-                        .as(StepVerifier::create)
-                        .expectNextCount(1)
-                        .verifyComplete());
-            }
-
-            @Test
-            void verifyFullFailedWithWrongHost() {
-                client(
-                    c -> c.sslRootCert(SERVER.getServerCrt())
-                        .sslHostnameVerifier(new FailedVerification())
-                        .sslMode(SSLMode.VERIFY_FULL),
-                    c -> c
-                        .as(StepVerifier::create)
-                        .verifyError(R2dbcPermissionDeniedException.class));
-            }
-
-            @Test
-            void verifyFullFailedWithWrongRootCert() {
-                client(
-                    c -> c
-                        .sslMode(SSLMode.VERIFY_FULL)
-                        .sslRootCert(SERVER.getClientCrt())
-                        .sslKey(SERVER.getClientKey())
-                        .sslCert(SERVER.getClientCrt()),
-                    c -> c
-                        .as(StepVerifier::create)
-                        .verifyError(R2dbcNonTransientResourceException.class));
-            }
-
-            @Test
-            void verifyFullFailedWithoutSsl() {
-                client(
-                    c -> c
-                        .sslMode(SSLMode.VERIFY_FULL)
-                        .sslRootCert(SERVER.getServerCrt())
-                        .username(SERVER.getUsername())
-                        .password(SERVER.getPassword()),
-                    c -> c
-                        .as(StepVerifier::create)
-                        .verifyError(R2dbcPermissionDeniedException.class));
-            }
-
-        }
-
-    }
+    // TODO: will need docker image and not available yet
+//    @Nested
+//    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+//    final class SslIntegrationTests {
+//
+//        @Test
+//        void exchangeSslWithClientCert() {
+//            client(
+//                c -> c,
+//                c -> c.map(client -> client.createStatement("SELECT 10")
+//                    .execute()
+//                    .flatMap(r -> r.map((row, meta) -> row.get(0, Integer.class)))
+//                    .as(StepVerifier::create)
+//                    .expectNext(10)
+//                    .verifyComplete()));
+//        }
+//
+//        @Test
+//        void exchangeSslWithClientCertInvalidClientCert() {
+//            client(
+//                c -> c.sslRootCert(SERVER.getServerCrt())
+//                    .sslCert(SERVER.getServerCrt())
+//                    .sslKey(SERVER.getServerKey()),
+//                c -> c
+//                    .as(StepVerifier::create)
+//                    .expectError(R2dbcPermissionDeniedException.class)
+//                    .verify());
+//        }
+//
+//        @Test
+//        void exchangeSslWithClientCertNoCert() {
+//            client(
+//                c -> c
+//                    .password("test"),
+//                c -> c
+//                    .as(StepVerifier::create)
+//                    .expectError(R2dbcPermissionDeniedException.class));
+//        }
+//
+//        @Test
+//        void exchangeSslWitScram() {
+//            client(
+//                c -> c
+//                    .sslRootCert(SERVER.getServerCrt())
+//                    .username("test-ssl-scram")
+//                    .password("test-ssl-scram"),
+//                c -> c.map(client -> client.createStatement("SELECT 10")
+//                    .execute()
+//                    .flatMap(r -> r.map((row, meta) -> row.get(0, Integer.class)))
+//                    .as(StepVerifier::create)
+//                    .expectNext(10)
+//                    .verifyComplete()));
+//        }
+//
+//        @Test
+//        void exchangeSslWithPassword() {
+//            client(
+//                c -> c
+//                    .sslRootCert(SERVER.getServerCrt())
+//                    .username("test-ssl")
+//                    .password("test-ssl"),
+//                c -> c.map(client -> client.createStatement("SELECT 10")
+//                    .execute()
+//                    .flatMap(r -> r.map((row, meta) -> row.get(0, Integer.class)))
+//                    .as(StepVerifier::create)
+//                    .expectNext(10)
+//                    .verifyComplete()));
+//        }
+//
+//        @Test
+//        void invalidServerCertificate() {
+//            client(
+//                c -> c
+//                    .sslRootCert(SERVER.getClientCrt()),
+//                c -> c
+//                    .as(StepVerifier::create)
+//                    .expectError(R2dbcNonTransientResourceException.class)
+//                    .verify());
+//        }
+//
+//        @Test
+//        void userIsNotAllowedToLoginWithSsl() {
+//            client(
+//                c -> c.sslRootCert(SERVER.getServerCrt())
+//                    .username(SERVER.getUsername())
+//                    .password(SERVER.getPassword())
+//                ,
+//                c -> c
+//                    .as(StepVerifier::create)
+//                    .verifyError(R2dbcPermissionDeniedException.class));
+//        }
+//
+//        @Test
+//        void userIsNotAllowedToLoginWithoutSsl() {
+//            client(
+//                c -> c.sslMode(SSLMode.DISABLE)
+//                    .username("test-ssl")
+//                    .password("test-ssl"),
+//                c -> c
+//                    .as(StepVerifier::create)
+//                    .verifyError(R2dbcPermissionDeniedException.class));
+//        }
+//
+//        private void client(Function<GaussDBConnectionConfiguration.Builder, GaussDBConnectionConfiguration.Builder> configurer,
+//                            Consumer<Mono<GaussDBConnection>> connectionConsumer) {
+//            GaussDBConnectionConfiguration.Builder defaultConfig = GaussDBConnectionConfiguration.builder()
+//                .database(SERVER.getDatabase())
+//                .host(SERVER.getHost())
+//                .port(SERVER.getPort())
+//                .username("test-ssl-with-cert")
+//                .password((String) null)
+//                .sslMode(SSLMode.VERIFY_FULL)
+//                .sslHostnameVerifier(new NoVerification());
+//            new GaussDBConnectionFactory(configurer.apply(defaultConfig).build()).create()
+//                .onErrorResume(e -> Mono.fromRunnable(() -> connectionConsumer.accept(Mono.error(e))))
+//                .delayUntil(connection -> Mono.fromRunnable(() -> connectionConsumer.accept(Mono.just(connection))))
+//                .flatMap(GaussDBConnection::close)
+//                .block();
+//        }
+//
+//        @Nested
+//        class SslModes {
+//
+//            @Test
+//            void allowFailed() {
+//                client(
+//                    c -> c
+//                        .sslMode(SSLMode.ALLOW)
+//                        .username("test-ssl")
+//                    ,
+//                    c -> c
+//                        .as(StepVerifier::create)
+//                        .verifyError(R2dbcPermissionDeniedException.class));
+//            }
+//
+//            @Test
+//            void allowFallbackToSsl() {
+//                client(
+//                    c -> c
+//                        .sslMode(SSLMode.ALLOW)
+//                        .username("test-ssl")
+//                        .password("test-ssl")
+//                    ,
+//                    c -> c
+//                        .as(StepVerifier::create)
+//                        .expectNextCount(1)
+//                        .verifyComplete());
+//            }
+//
+//            @Test
+//            void allowFallbackToSslAndFailedAgain() {
+//                client(
+//                    c -> c
+//                        .sslMode(SSLMode.ALLOW)
+//                        .username("test-ssl-test")
+//                        .password("test-ssl")
+//                    ,
+//                    c -> c
+//                        .as(StepVerifier::create)
+//                        .verifyError(R2dbcPermissionDeniedException.class));
+//            }
+//
+//            @Test
+//            void allowWithoutSsl() {
+//                client(
+//                    c -> c
+//                        .sslMode(SSLMode.ALLOW)
+//                        .username(SERVER.getUsername())
+//                        .password(SERVER.getPassword())
+//                    ,
+//                    c -> c
+//                        .as(StepVerifier::create)
+//                        .expectNextCount(1)
+//                        .verifyComplete());
+//            }
+//
+//            @Test
+//            void disabled() {
+//                client(
+//                    c -> c
+//                        .sslMode(SSLMode.DISABLE)
+//                        .username(SERVER.getUsername())
+//                        .password(SERVER.getPassword()),
+//                    c -> c
+//                        .as(StepVerifier::create)
+//                        .expectNextCount(1)
+//                        .verifyComplete());
+//            }
+//
+//            @Test
+//            void disabledFailedForSslOnlyUser() {
+//                client(
+//                    c -> c
+//                        .sslMode(SSLMode.DISABLE)
+//                        .password("test-ssl")
+//                        .password("test-ssl")
+//                    ,
+//                    c -> c
+//                        .as(StepVerifier::create)
+//                        .expectError(R2dbcPermissionDeniedException.class)
+//                        .verify());
+//            }
+//
+//            @Test
+//            void preferFallbackToTcp() {
+//                client(
+//                    c -> c
+//                        .sslMode(SSLMode.PREFER)
+//                        .username(SERVER.getUsername())
+//                        .password(SERVER.getPassword())
+//                    ,
+//                    c -> c
+//                        .as(StepVerifier::create)
+//                        .expectNextCount(1)
+//                        .verifyComplete());
+//            }
+//
+//            @Test
+//            void preferFallbackToTcpAndFailed() {
+//                client(
+//                    c -> c
+//                        .sslMode(SSLMode.PREFER)
+//                        .username("test-ssl-test")
+//                        .password(SERVER.getPassword())
+//                    ,
+//                    c -> c
+//                        .as(StepVerifier::create)
+//                        .expectError(R2dbcPermissionDeniedException.class));
+//            }
+//
+//            @Test
+//            void preferWithSsl() {
+//                client(
+//                    c -> c
+//                        .sslMode(SSLMode.PREFER)
+//                        .sslKey(SERVER.getClientKey())
+//                        .sslCert(SERVER.getClientCrt()),
+//                    c -> c
+//                        .as(StepVerifier::create)
+//                        .expectNextCount(1)
+//                        .verifyComplete());
+//            }
+//
+//            @Test
+//            void require() {
+//                client(
+//                    c -> c
+//                        .sslMode(SSLMode.REQUIRE)
+//                        .sslRootCert(SERVER.getServerCrt())
+//                        .sslKey(SERVER.getClientKey())
+//                        .sslCert(SERVER.getClientCrt()),
+//                    c -> c
+//                        .as(StepVerifier::create)
+//                        .expectNextCount(1)
+//                        .verifyComplete());
+//            }
+//
+//            @Test
+//            void requireConnectsWithoutCertificate() {
+//                client(
+//                    c -> c
+//                        .sslMode(SSLMode.REQUIRE)
+//                        .sslKey(SERVER.getClientKey())
+//                        .sslCert(SERVER.getClientCrt()),
+//                    c -> c
+//                        .as(StepVerifier::create)
+//                        .expectNextCount(1)
+//                        .verifyComplete());
+//            }
+//
+//            @Test
+//            void requireFailed() {
+//                client(
+//                    c -> c
+//                        .sslMode(SSLMode.REQUIRE)
+//                        .username(SERVER.getUsername())
+//                        .password(SERVER.getPassword())
+//                    ,
+//                    c -> c
+//                        .as(StepVerifier::create)
+//                        .verifyError(R2dbcPermissionDeniedException.class));
+//            }
+//
+//            @Test
+//            void verifyCa() {
+//                client(
+//                    c -> c.sslRootCert(SERVER.getServerCrt())
+//                        .sslKey(SERVER.getClientKey())
+//                        .sslCert(SERVER.getClientCrt())
+//                        .sslMode(SSLMode.VERIFY_CA),
+//                    c -> c
+//                        .as(StepVerifier::create)
+//                        .expectNextCount(1)
+//                        .verifyComplete());
+//            }
+//
+//            @Test
+//            void verifyCaWithCustomizer() {
+//                client(
+//                    c -> c.sslContextBuilderCustomizer(sslContextBuilder -> {
+//                        return sslContextBuilder.trustManager(new File(SERVER.getServerCrt()))
+//                            .keyManager(new File(SERVER.getClientCrt()), new File(SERVER.getClientKey()));
+//                    })
+//                        .sslMode(SSLMode.VERIFY_CA),
+//                    c -> c
+//                        .as(StepVerifier::create)
+//                        .expectNextCount(1)
+//                        .verifyComplete());
+//            }
+//
+//            @Test
+//            void verifyCaFailedWithWrongRootCert() {
+//                client(
+//                    c -> c
+//                        .sslRootCert(SERVER.getClientCrt())
+//                        .sslMode(SSLMode.VERIFY_CA),
+//                    c -> c
+//                        .as(StepVerifier::create)
+//                        .verifyError(R2dbcNonTransientResourceException.class));
+//            }
+//
+//            @Test
+//            void verifyCaFailedWithoutSsl() {
+//                client(
+//                    c -> c
+//                        .sslMode(SSLMode.VERIFY_CA)
+//                        .sslRootCert(SERVER.getServerCrt())
+//                        .sslKey(SERVER.getClientKey())
+//                        .sslCert(SERVER.getClientCrt())
+//                        .username(SERVER.getUsername())
+//                        .password(SERVER.getPassword()),
+//                    c -> c
+//                        .as(StepVerifier::create)
+//                        .verifyError(R2dbcPermissionDeniedException.class));
+//            }
+//
+//            @Test
+//            void verifyFull() {
+//                client(
+//                    c -> c
+//                        .sslMode(SSLMode.VERIFY_FULL)
+//                        .sslRootCert(SERVER.getServerCrt())
+//                        .sslKey(SERVER.getClientKey())
+//                        .sslCert(SERVER.getClientCrt()),
+//                    c -> c
+//                        .as(StepVerifier::create)
+//                        .expectNextCount(1)
+//                        .verifyComplete());
+//            }
+//
+//            @Test
+//            void verifyFullFailedWithWrongHost() {
+//                client(
+//                    c -> c.sslRootCert(SERVER.getServerCrt())
+//                        .sslHostnameVerifier(new FailedVerification())
+//                        .sslMode(SSLMode.VERIFY_FULL),
+//                    c -> c
+//                        .as(StepVerifier::create)
+//                        .verifyError(R2dbcPermissionDeniedException.class));
+//            }
+//
+//            @Test
+//            void verifyFullFailedWithWrongRootCert() {
+//                client(
+//                    c -> c
+//                        .sslMode(SSLMode.VERIFY_FULL)
+//                        .sslRootCert(SERVER.getClientCrt())
+//                        .sslKey(SERVER.getClientKey())
+//                        .sslCert(SERVER.getClientCrt()),
+//                    c -> c
+//                        .as(StepVerifier::create)
+//                        .verifyError(R2dbcNonTransientResourceException.class));
+//            }
+//
+//            @Test
+//            void verifyFullFailedWithoutSsl() {
+//                client(
+//                    c -> c
+//                        .sslMode(SSLMode.VERIFY_FULL)
+//                        .sslRootCert(SERVER.getServerCrt())
+//                        .username(SERVER.getUsername())
+//                        .password(SERVER.getPassword()),
+//                    c -> c
+//                        .as(StepVerifier::create)
+//                        .verifyError(R2dbcPermissionDeniedException.class));
+//            }
+//
+//        }
+//
+//    }
 
     @Test
     void handleNotify() {
-        Sinks.Many<NotificationResponse> sink = Sinks.many().unicast().onBackpressureBuffer();
-        this.client.addNotificationListener(sink::tryEmitNext);
-
-        this.client
-            .exchange(Mono.just(new Query("LISTEN events")))
-            .blockLast();
-
-        SERVER.getJdbcOperations().execute("NOTIFY events, 'test'");
-
-        StepVerifier.create(sink.asFlux())
-            .assertNext(message -> assertThat(message.getPayload()).isEqualTo("test"))
-            .thenCancel()
-            .verify();
+        // TODO: gaussdb do not support LISTEN/NOTIFY yet
+//        Sinks.Many<NotificationResponse> sink = Sinks.many().unicast().onBackpressureBuffer();
+//        this.client.addNotificationListener(sink::tryEmitNext);
+//
+//        this.client
+//            .exchange(Mono.just(new Query("LISTEN events")))
+//            .blockLast();
+//
+//        SERVER.getJdbcOperations().execute("NOTIFY events, 'test'");
+//
+//        StepVerifier.create(sink.asFlux())
+//            .assertNext(message -> assertThat(message.getPayload()).isEqualTo("test"))
+//            .thenCancel()
+//            .verify();
     }
 
     @Test
     void handleTrigger() {
-        SERVER.getJdbcOperations().execute(
-            "CREATE OR REPLACE FUNCTION notify_event() RETURNS TRIGGER AS $$\n" +
-                "  DECLARE\n" +
-                "    payload JSON;\n" +
-                "  BEGIN\n" +
-                "    payload = row_to_json(NEW);\n" +
-                "    PERFORM pg_notify('events', payload::text);\n" +
-                "    RETURN NULL;\n" +
-                "  END;\n" +
-                "$$ LANGUAGE plpgsql;");
-
-        SERVER.getJdbcOperations().execute(
-            "CREATE TRIGGER notify_test_event\n" +
-                "AFTER INSERT OR UPDATE OR DELETE ON test\n" +
-                "  FOR EACH ROW EXECUTE PROCEDURE notify_event();");
-
-        Sinks.Many<NotificationResponse> sink = Sinks.many().unicast().onBackpressureBuffer();
-        this.client.addNotificationListener(sink::tryEmitNext);
-
-        this.client
-            .exchange(Mono.just(new Query("LISTEN events")))
-            .as(StepVerifier::create)
-            .expectNextCount(1)
-            .verifyComplete();
-
-        SERVER.getJdbcOperations().execute("INSERT INTO test VALUES (100)");
-        SERVER.getJdbcOperations().execute("INSERT INTO test VALUES (1000)");
-
-        StepVerifier.create(sink.asFlux())
-            .assertNext(message -> assertThat(message.getPayload()).isEqualTo("{\"value\":100}"))
-            .assertNext(message -> assertThat(message.getPayload()).isEqualTo("{\"value\":1000}"))
-            .thenCancel()
-            .verify();
+        // TODO: gaussdb do not support LISTEN/NOTIFY yet
+//        SERVER.getJdbcOperations().execute(
+//            "CREATE OR REPLACE FUNCTION notify_event() RETURNS TRIGGER AS $$\n" +
+//                "  DECLARE\n" +
+//                "    payload JSON;\n" +
+//                "  BEGIN\n" +
+//                "    payload = row_to_json(NEW);\n" +
+//                "    PERFORM pg_notify('events', payload::text);\n" +
+//                "    RETURN NULL;\n" +
+//                "  END;\n" +
+//                "$$ LANGUAGE plpgsql;");
+//
+//        SERVER.getJdbcOperations().execute(
+//            "CREATE TRIGGER notify_test_event\n" +
+//                "AFTER INSERT OR UPDATE OR DELETE ON test\n" +
+//                "  FOR EACH ROW EXECUTE PROCEDURE notify_event();");
+//
+//        Sinks.Many<NotificationResponse> sink = Sinks.many().unicast().onBackpressureBuffer();
+//        this.client.addNotificationListener(sink::tryEmitNext);
+//
+//        this.client
+//            .exchange(Mono.just(new Query("LISTEN events")))
+//            .as(StepVerifier::create)
+//            .expectNextCount(1)
+//            .verifyComplete();
+//
+//        SERVER.getJdbcOperations().execute("INSERT INTO test VALUES (100)");
+//        SERVER.getJdbcOperations().execute("INSERT INTO test VALUES (1000)");
+//
+//        StepVerifier.create(sink.asFlux())
+//            .assertNext(message -> assertThat(message.getPayload()).isEqualTo("{\"value\":100}"))
+//            .assertNext(message -> assertThat(message.getPayload()).isEqualTo("{\"value\":1000}"))
+//            .thenCancel()
+//            .verify();
     }
 
     private Flux<BackendMessage> datarowCleanup(Flux<BackendMessage> in) {

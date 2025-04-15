@@ -28,58 +28,58 @@ import reactor.test.StepVerifier;
  * Integration tests for {@link GaussDBConnectionFactory} through PG Bouncer.
  */
 final class PgBouncerIntegrationTests {
-
-    @RegisterExtension
-    static final GaussDBServerExtension SERVER = new GaussDBServerExtension();
-
-    @ParameterizedTest
-    @ValueSource(strings = {"transaction", "statement"})
-    void disabledCacheWorksWithTransactionAndStatementModes(String poolMode) {
-        try (PgBouncer pgBouncer = new PgBouncer(SERVER, poolMode)) {
-            GaussDBConnectionFactory connectionFactory = this.createConnectionFactory(pgBouncer, 0);
-
-            connectionFactory.create().flatMapMany(connection -> {
-                Flux<Integer> q1 = connection.createStatement("SELECT 1 WHERE $1 = 1").bind(0, 1).execute().flatMap(r -> r.map((row, rowMetadata) -> row.get(0, Integer.class)));
-                Flux<Integer> q2 = connection.createStatement("SELECT 2 WHERE $1 = 2").bind(0, 2).execute().flatMap(r -> r.map((row, rowMetadata) -> row.get(0, Integer.class)));
-                Flux<Integer> q3 = connection.createStatement("SELECT 3 WHERE $1 = 3").bind(0, 3).execute().flatMap(r -> r.map((row, rowMetadata) -> row.get(0, Integer.class)));
-
-                return Flux.concat(q1, q1, q2, q2, q3, q3, connection.close());
-            })
-                .as(StepVerifier::create)
-                .expectNext(1, 1, 2, 2, 3, 3)
-                .verifyComplete();
-        }
-    }
-
-    @ParameterizedTest
-    @ValueSource(ints = {-1, 0, 2})
-    void sessionModeWorksWithAllCaches(int statementCacheSize) {
-        try (PgBouncer pgBouncer = new PgBouncer(SERVER, "session")) {
-            GaussDBConnectionFactory connectionFactory = this.createConnectionFactory(pgBouncer, statementCacheSize);
-
-            connectionFactory.create().flatMapMany(connection -> {
-                Flux<Integer> q1 = connection.createStatement("SELECT 1 WHERE $1 = 1").bind(0, 1).execute().flatMap(r -> r.map((row, rowMetadata) -> row.get(0, Integer.class)));
-                Flux<Integer> q2 = connection.createStatement("SELECT 2 WHERE $1 = 2").bind(0, 2).execute().flatMap(r -> r.map((row, rowMetadata) -> row.get(0, Integer.class)));
-                Flux<Integer> q3 = connection.createStatement("SELECT 3 WHERE $1 = 3").bind(0, 3).execute().flatMap(r -> r.map((row, rowMetadata) -> row.get(0, Integer.class)));
-
-                return Flux.concat(q1, q1, q2, q2, q3, q3, connection.close());
-            })
-                .as(StepVerifier::create)
-                .expectNext(1, 1, 2, 2, 3, 3)
-                .verifyComplete();
-        }
-    }
-
-    private GaussDBConnectionFactory createConnectionFactory(PgBouncer pgBouncer, int statementCacheSize) {
-        return new GaussDBConnectionFactory(GaussDBConnectionConfiguration.builder()
-            .host(pgBouncer.getHost())
-            .port(pgBouncer.getPort())
-            .username(SERVER.getUsername())
-            .password(SERVER.getPassword())
-            .database(SERVER.getDatabase())
-            .preparedStatementCacheQueries(statementCacheSize)
-            .applicationName(getClass().getName())
-            .build());
-    }
+// TODO： GaussDB do not support PgBouncer yet
+//    @RegisterExtension
+//    static final GaussDBServerExtension SERVER = new GaussDBServerExtension();
+//
+//    @ParameterizedTest
+//    @ValueSource(strings = {"transaction", "statement"})
+//    void disabledCacheWorksWithTransactionAndStatementModes(String poolMode) {
+//        try (PgBouncer pgBouncer = new PgBouncer(SERVER, poolMode)) {
+//            GaussDBConnectionFactory connectionFactory = this.createConnectionFactory(pgBouncer, 0);
+//
+//            connectionFactory.create().flatMapMany(connection -> {
+//                Flux<Integer> q1 = connection.createStatement("SELECT 1 WHERE $1 = 1").bind(0, 1).execute().flatMap(r -> r.map((row, rowMetadata) -> row.get(0, Integer.class)));
+//                Flux<Integer> q2 = connection.createStatement("SELECT 2 WHERE $1 = 2").bind(0, 2).execute().flatMap(r -> r.map((row, rowMetadata) -> row.get(0, Integer.class)));
+//                Flux<Integer> q3 = connection.createStatement("SELECT 3 WHERE $1 = 3").bind(0, 3).execute().flatMap(r -> r.map((row, rowMetadata) -> row.get(0, Integer.class)));
+//
+//                return Flux.concat(q1, q1, q2, q2, q3, q3, connection.close());
+//            })
+//                .as(StepVerifier::create)
+//                .expectNext(1, 1, 2, 2, 3, 3)
+//                .verifyComplete();
+//        }
+//    }
+//
+//    @ParameterizedTest
+//    @ValueSource(ints = {-1, 0, 2})
+//    void sessionModeWorksWithAllCaches(int statementCacheSize) {
+//        try (PgBouncer pgBouncer = new PgBouncer(SERVER, "session")) {
+//            GaussDBConnectionFactory connectionFactory = this.createConnectionFactory(pgBouncer, statementCacheSize);
+//
+//            connectionFactory.create().flatMapMany(connection -> {
+//                Flux<Integer> q1 = connection.createStatement("SELECT 1 WHERE $1 = 1").bind(0, 1).execute().flatMap(r -> r.map((row, rowMetadata) -> row.get(0, Integer.class)));
+//                Flux<Integer> q2 = connection.createStatement("SELECT 2 WHERE $1 = 2").bind(0, 2).execute().flatMap(r -> r.map((row, rowMetadata) -> row.get(0, Integer.class)));
+//                Flux<Integer> q3 = connection.createStatement("SELECT 3 WHERE $1 = 3").bind(0, 3).execute().flatMap(r -> r.map((row, rowMetadata) -> row.get(0, Integer.class)));
+//
+//                return Flux.concat(q1, q1, q2, q2, q3, q3, connection.close());
+//            })
+//                .as(StepVerifier::create)
+//                .expectNext(1, 1, 2, 2, 3, 3)
+//                .verifyComplete();
+//        }
+//    }
+//
+//    private GaussDBConnectionFactory createConnectionFactory(PgBouncer pgBouncer, int statementCacheSize) {
+//        return new GaussDBConnectionFactory(GaussDBConnectionConfiguration.builder()
+//            .host(pgBouncer.getHost())
+//            .port(pgBouncer.getPort())
+//            .username(SERVER.getUsername())
+//            .password(SERVER.getPassword())
+//            .database(SERVER.getDatabase())
+//            .preparedStatementCacheQueries(statementCacheSize)
+//            .applicationName(getClass().getName())
+//            .build());
+//    }
 
 }

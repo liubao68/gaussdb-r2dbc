@@ -33,54 +33,54 @@ import static org.assertj.core.api.Assumptions.assumeThat;
  * Integration tests for PostGIS functionality.
  */
 final class PostgisIntegrationTests extends AbstractIntegrationTests {
-
-    @Override
-    @BeforeEach
-    void setUp() {
-
-        JdbcOperations jdbcOperations = SERVER.getJdbcOperations();
-
-        try {
-            jdbcOperations.execute("CREATE EXTENSION postgis");
-        } catch (DataAccessException e) {
-            // ignore
-        }
-
-        try {
-            jdbcOperations.queryForMap("SELECT postgis_full_version()");
-        } catch (DataAccessException e) {
-            assumeThat(e).isNull();
-        }
-
-        super.setUp();
-    }
-
-    @Test
-    void shouldWriteAndReadPointWithSRID() {
-
-        JdbcOperations jdbcOperations = SERVER.getJdbcOperations();
-
-        jdbcOperations.execute("DROP TABLE IF EXISTS geo_test");
-        jdbcOperations.execute("CREATE TABLE geo_test (geom geometry)");
-
-        PackedCoordinateSequenceFactory csFactory = new PackedCoordinateSequenceFactory();
-
-        CoordinateSequence cs = csFactory.create(1, 2);
-        // initialize with a data signature where coords look like [1, 10, 100, ...]
-        for (int i = 0; i < 1; i++) {
-            for (int d = 0; d < 2; d++) {
-                cs.setOrdinate(i, d, i + 1 * Math.pow(10, d + 1));
-            }
-        }
-        Point point = new Point(cs, new GeometryFactory());
-        point.setSRID(4210);
-
-        this.connection.createStatement("INSERT INTO geo_test VALUES($1)").bind("$1", point).execute().flatMap(it -> it.getRowsUpdated()).then().as(StepVerifier::create).verifyComplete();
-
-        this.connection.createStatement("SELECT * FROM geo_test").execute().flatMap(it -> it.map(row -> row.get("geom"))).as(StepVerifier::create).consumeNextWith(actual -> {
-            assertThat(actual).isEqualTo(point);
-            assertThat(((Point) actual).getSRID()).isEqualTo(point.getSRID());
-        }).verifyComplete();
-    }
+    // Extension is not a secure feature，GaussDB disabled by default
+//    @Override
+//    @BeforeEach
+//    void setUp() {
+//
+//        JdbcOperations jdbcOperations = SERVER.getJdbcOperations();
+//
+//        try {
+//            jdbcOperations.execute("CREATE EXTENSION postgis");
+//        } catch (DataAccessException e) {
+//            // ignore
+//        }
+//
+//        try {
+//            jdbcOperations.queryForMap("SELECT postgis_full_version()");
+//        } catch (DataAccessException e) {
+//            assumeThat(e).isNull();
+//        }
+//
+//        super.setUp();
+//    }
+//
+//    @Test
+//    void shouldWriteAndReadPointWithSRID() {
+//
+//        JdbcOperations jdbcOperations = SERVER.getJdbcOperations();
+//
+//        jdbcOperations.execute("DROP TABLE IF EXISTS geo_test");
+//        jdbcOperations.execute("CREATE TABLE geo_test (geom geometry)");
+//
+//        PackedCoordinateSequenceFactory csFactory = new PackedCoordinateSequenceFactory();
+//
+//        CoordinateSequence cs = csFactory.create(1, 2);
+//        // initialize with a data signature where coords look like [1, 10, 100, ...]
+//        for (int i = 0; i < 1; i++) {
+//            for (int d = 0; d < 2; d++) {
+//                cs.setOrdinate(i, d, i + 1 * Math.pow(10, d + 1));
+//            }
+//        }
+//        Point point = new Point(cs, new GeometryFactory());
+//        point.setSRID(4210);
+//
+//        this.connection.createStatement("INSERT INTO geo_test VALUES($1)").bind("$1", point).execute().flatMap(it -> it.getRowsUpdated()).then().as(StepVerifier::create).verifyComplete();
+//
+//        this.connection.createStatement("SELECT * FROM geo_test").execute().flatMap(it -> it.map(row -> row.get("geom"))).as(StepVerifier::create).consumeNextWith(actual -> {
+//            assertThat(actual).isEqualTo(point);
+//            assertThat(((Point) actual).getSRID()).isEqualTo(point.getSRID());
+//        }).verifyComplete();
+//    }
 
 }
