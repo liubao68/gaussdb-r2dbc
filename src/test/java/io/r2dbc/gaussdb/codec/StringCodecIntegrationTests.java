@@ -31,75 +31,75 @@ class StringCodecIntegrationTests extends AbstractIntegrationTests {
 
     @Test
     void stringCodecShouldConsiderCIText() {
-
-        SERVER.getJdbcOperations().execute("CREATE EXTENSION IF NOT EXISTS citext WITH SCHEMA public");
-
-        SERVER.getJdbcOperations().execute("DROP TABLE IF EXISTS test");
-        SERVER.getJdbcOperations().execute("CREATE TABLE test (ci CITEXT, cs VARCHAR)");
-        SERVER.getJdbcOperations().execute("INSERT INTO test VALUES('HeLlO', 'HeLlO')");
-
-        this.connection.createStatement("SELECT ci FROM test WHERE ci = $1::citext")
-            .bind("$1", "Hello")
-            .execute()
-            .flatMap(it -> it.map(r -> r.get("ci")))
-            .as(StepVerifier::create)
-            .expectNext("HeLlO")
-            .verifyComplete();
-
-        this.connection.createStatement("SELECT ci FROM test WHERE ci = $1")
-            .bind("$1", Parameters.in(GaussDBObjectId.UNSPECIFIED, "Hello"))
-            .execute()
-            .flatMap(it -> it.map(r -> r.get("ci")))
-            .as(StepVerifier::create)
-            .expectNext("HeLlO")
-            .verifyComplete();
-
-        this.connection.createStatement("SELECT cs::citext = $1 FROM test")
-            .bind("$1", Parameters.in(GaussDBObjectId.UNSPECIFIED, "Hello"))
-            .execute()
-            .flatMap(it -> it.map(r -> r.get(0)))
-            .as(StepVerifier::create)
-            .expectNext(true)
-            .verifyComplete();
-
-        this.connection.createStatement("SELECT cs::citext = $1 FROM test")
-            .bind("$1", "Hello")
-            .execute()
-            .flatMap(it -> it.map(r -> r.get(0)))
-            .as(StepVerifier::create)
-            .expectNext(false)
-            .verifyComplete();
-
-        SERVER.getJdbcOperations().execute("DROP TABLE test");
+        // Extension is not a secure feature，GaussDB disabled by default
+//        SERVER.getJdbcOperations().execute("CREATE EXTENSION IF NOT EXISTS citext WITH SCHEMA public");
+//
+//        SERVER.getJdbcOperations().execute("DROP TABLE IF EXISTS test");
+//        SERVER.getJdbcOperations().execute("CREATE TABLE test (ci CITEXT, cs VARCHAR)");
+//        SERVER.getJdbcOperations().execute("INSERT INTO test VALUES('HeLlO', 'HeLlO')");
+//
+//        this.connection.createStatement("SELECT ci FROM test WHERE ci = $1::citext")
+//            .bind("$1", "Hello")
+//            .execute()
+//            .flatMap(it -> it.map(r -> r.get("ci")))
+//            .as(StepVerifier::create)
+//            .expectNext("HeLlO")
+//            .verifyComplete();
+//
+//        this.connection.createStatement("SELECT ci FROM test WHERE ci = $1")
+//            .bind("$1", Parameters.in(GaussDBObjectId.UNSPECIFIED, "Hello"))
+//            .execute()
+//            .flatMap(it -> it.map(r -> r.get("ci")))
+//            .as(StepVerifier::create)
+//            .expectNext("HeLlO")
+//            .verifyComplete();
+//
+//        this.connection.createStatement("SELECT cs::citext = $1 FROM test")
+//            .bind("$1", Parameters.in(GaussDBObjectId.UNSPECIFIED, "Hello"))
+//            .execute()
+//            .flatMap(it -> it.map(r -> r.get(0)))
+//            .as(StepVerifier::create)
+//            .expectNext(true)
+//            .verifyComplete();
+//
+//        this.connection.createStatement("SELECT cs::citext = $1 FROM test")
+//            .bind("$1", "Hello")
+//            .execute()
+//            .flatMap(it -> it.map(r -> r.get(0)))
+//            .as(StepVerifier::create)
+//            .expectNext(false)
+//            .verifyComplete();
+//
+//        SERVER.getJdbcOperations().execute("DROP TABLE test");
     }
 
     @Test
     void shouldApplyCustomizedCodec() {
-
-        SERVER.getJdbcOperations().execute("CREATE EXTENSION IF NOT EXISTS citext WITH SCHEMA public");
-
-        SERVER.getJdbcOperations().execute("DROP TABLE IF EXISTS test");
-        SERVER.getJdbcOperations().execute("CREATE TABLE test ( ci CITEXT, cs VARCHAR)");
-        SERVER.getJdbcOperations().execute("INSERT INTO test VALUES('HELLO', 'HELLO')");
-
-        GaussDBConnectionFactory custom = getConnectionFactory(builder -> builder.codecRegistrar((connection1, allocator, registry) -> {
-            registry.addFirst(new StringCodec(allocator, GaussDBObjectId.UNSPECIFIED, GaussDBObjectId.VARCHAR_ARRAY));
-            return Mono.empty();
-        }));
-
-        GaussDBConnection customizedConnection = custom.create().block();
-
-        customizedConnection.createStatement("SELECT cs::citext = $1 FROM test")
-            .bind("$1", "Hello")
-            .execute()
-            .flatMap(it -> it.map(r -> r.get(0)))
-            .as(StepVerifier::create)
-            .expectNext(true)
-            .verifyComplete();
-
-        customizedConnection.close().block();
-
-        SERVER.getJdbcOperations().execute("DROP TABLE test");
+        // Extension is not a secure feature，GaussDB disabled by default
+//        SERVER.getJdbcOperations().execute("CREATE EXTENSION IF NOT EXISTS citext WITH SCHEMA public");
+//
+//        SERVER.getJdbcOperations().execute("DROP TABLE IF EXISTS test");
+//        SERVER.getJdbcOperations().execute("CREATE TABLE test ( ci CITEXT, cs VARCHAR)");
+//        SERVER.getJdbcOperations().execute("INSERT INTO test VALUES('HELLO', 'HELLO')");
+//
+//        GaussDBConnectionFactory custom = getConnectionFactory(builder -> builder.codecRegistrar((connection1, allocator, registry) -> {
+//            registry.addFirst(new StringCodec(allocator, GaussDBObjectId.UNSPECIFIED, GaussDBObjectId.VARCHAR_ARRAY));
+//            return Mono.empty();
+//        }));
+//
+//        GaussDBConnection customizedConnection = custom.create().block();
+//
+//        customizedConnection.createStatement("SELECT cs::citext = $1 FROM test")
+//            .bind("$1", "Hello")
+//            .execute()
+//            .flatMap(it -> it.map(r -> r.get(0)))
+//            .as(StepVerifier::create)
+//            .expectNext(true)
+//            .verifyComplete();
+//
+//        customizedConnection.close().block();
+//
+//        SERVER.getJdbcOperations().execute("DROP TABLE test");
     }
 
 }

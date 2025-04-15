@@ -34,169 +34,169 @@ import static org.assertj.core.api.Assumptions.assumeThat;
  * Integration tests for {@link Vector}.
  */
 final class VectorIntegrationTests extends AbstractIntegrationTests {
-
-    @Override
-    @BeforeEach
-    void setUp() {
-
-        JdbcOperations jdbcOperations = SERVER.getJdbcOperations();
-        List<Map<String, Object>> extensions = jdbcOperations.queryForList("select * from pg_available_extensions() where name = 'vector'");
-        assumeThat(extensions).isNotEmpty();
-
-        jdbcOperations.execute("CREATE EXTENSION IF NOT EXISTS VECTOR;");
-        jdbcOperations.execute("CREATE TABLE IF NOT EXISTS vector_arrays (id bigserial PRIMARY KEY, embedding vector[3]);");
-        jdbcOperations.execute("CREATE TABLE IF NOT EXISTS vector_items (id bigserial PRIMARY KEY, embedding vector(3));");
-
-        jdbcOperations.execute("DELETE FROM vector_arrays;");
-        jdbcOperations.execute("DELETE FROM vector_items;");
-
-        super.setUp();
-    }
-
-    @Override
-    protected void customize(GaussDBConnectionConfiguration.Builder builder) {
-        builder.forceBinary(true);
-        super.customize(builder);
-    }
-
-    @Test
-    void shouldReadVector() {
-
-        JdbcOperations jdbcOperations = SERVER.getJdbcOperations();
-
-        jdbcOperations.execute("INSERT INTO vector_items (embedding) VALUES ('[1,2,3]'), ('[4,5,6]');");
-
-        GaussDBConnection connection = this.connectionFactory.create().block();
-
-        connection.createStatement("SELECT * FROM vector_items WHERE id != $1 ORDER BY embedding <-> '[3,1,2]' ")
-            .bind("$1", 1)
-            .execute()
-            .flatMap(result -> result.map(readable -> readable.get("embedding")))
-            .as(StepVerifier::create)
-            .assertNext(o -> {
-                assertThat(o).isInstanceOf(Vector.class).isEqualTo(Vector.of(1, 2, 3));
-            })
-            .assertNext(o -> {
-                assertThat(o).isInstanceOf(Vector.class).isEqualTo(Vector.of(4, 5, 6));
-            })
-            .verifyComplete();
-
-        connection.createStatement("SELECT * FROM vector_items WHERE id != $1 ORDER BY embedding <-> '[3,1,2]' ")
-            .bind("$1", 1)
-            .execute()
-            .flatMap(result -> result.map(readable -> readable.get("embedding", float[].class)))
-            .as(StepVerifier::create)
-            .assertNext(o -> {
-                assertThat(o).contains(1f, 2f, 3f);
-            })
-            .assertNext(o -> {
-                assertThat(o).contains(4, 5, 6);
-            })
-            .verifyComplete();
-
-        connection.close().block();
-    }
-
-    @Test
-    void shouldReadVectorArray() {
-
-        JdbcOperations jdbcOperations = SERVER.getJdbcOperations();
-        jdbcOperations.execute("INSERT INTO vector_arrays (embedding) VALUES (ARRAY['[1,2,3]'::vector,'[4,5,6]'::vector]);");
-
-        GaussDBConnection connection = this.connectionFactory.create().block();
-
-        connection.createStatement("SELECT * FROM vector_arrays WHERE id != $1")
-            .bind("$1", 1)
-            .execute()
-            .flatMap(result -> result.map(readable -> readable.get("embedding")))
-            .as(StepVerifier::create)
-            .assertNext(o -> {
-                assertThat(o).isInstanceOf(Vector[].class);
-                assertThat((Vector[]) o).contains(Vector.of(1, 2, 3), Vector.of(4, 5, 6));
-            })
-            .verifyComplete();
-
-        connection.close().block();
-    }
-
-    @Test
-    void shouldWriteVector() {
-
-        GaussDBConnection connection = this.connectionFactory.create().block();
-
-        connection.createStatement("INSERT INTO vector_items (embedding) VALUES ($1)")
-            .bind("$1", Vector.of(1, 2, 3))
-            .execute()
-            .flatMap(GaussDBResult::getRowsUpdated)
-            .as(StepVerifier::create)
-            .expectNext(1L)
-            .verifyComplete();
-
-        connection.createStatement("SELECT * FROM vector_items")
-            .execute()
-            .flatMap(result -> result.map(readable -> readable.get("embedding")))
-            .as(StepVerifier::create)
-            .assertNext(o -> {
-                assertThat(o).isInstanceOf(Vector.class).isEqualTo(Vector.of(1, 2, 3));
-            }).verifyComplete();
-
-        connection.close().block();
-    }
-
-    @Test
-    void shouldWriteVectorArray() {
-
-        GaussDBConnection connection = this.connectionFactory.create().block();
-
-        connection.createStatement("INSERT INTO vector_arrays (embedding) VALUES ($1);")
-            .bind("$1", new Vector[]{Vector.of(1, 2, 3), Vector.of(4, 5, 6)})
-            .execute()
-            .flatMap(GaussDBResult::getRowsUpdated)
-            .as(StepVerifier::create)
-            .expectNext(1L)
-            .verifyComplete();
-
-        connection.createStatement("SELECT * FROM vector_arrays WHERE id != $1")
-            .bind("$1", 1)
-            .execute()
-            .flatMap(result -> result.map(readable -> readable.get("embedding")))
-            .as(StepVerifier::create)
-            .assertNext(o -> {
-                assertThat(o).isInstanceOf(Vector[].class);
-                assertThat((Vector[]) o).contains(Vector.of(1, 2, 3), Vector.of(4, 5, 6));
-            })
-            .verifyComplete();
-
-        connection.close().block();
-    }
-
-    @Test
-    void shouldWriteVectorArrayWithNulls() {
-
-        JdbcOperations jdbcOperations = SERVER.getJdbcOperations();
-
-        GaussDBConnection connection = this.connectionFactory.create().block();
-
-        connection.createStatement("INSERT INTO vector_arrays (embedding) VALUES ($1);")
-            .bind("$1", new Vector[]{Vector.of(1, 2, 3), null, Vector.of(4, 5, 6)})
-            .execute()
-            .flatMap(GaussDBResult::getRowsUpdated)
-            .as(StepVerifier::create)
-            .expectNext(1L)
-            .verifyComplete();
-
-        connection.createStatement("SELECT * FROM vector_arrays WHERE id != $1")
-            .bind("$1", 1)
-            .execute()
-            .flatMap(result -> result.map(readable -> readable.get("embedding")))
-            .as(StepVerifier::create)
-            .assertNext(o -> {
-                assertThat(o).isInstanceOf(Vector[].class);
-                assertThat((Vector[]) o).contains(Vector.of(1, 2, 3), Vector.of(4, 5, 6));
-            })
-            .verifyComplete();
-
-        connection.close().block();
-    }
+    // Extension is not a secure feature，GaussDB disabled by default
+//    @Override
+//    @BeforeEach
+//    void setUp() {
+//
+//        JdbcOperations jdbcOperations = SERVER.getJdbcOperations();
+//        List<Map<String, Object>> extensions = jdbcOperations.queryForList("select * from pg_available_extensions() where name = 'vector'");
+//        assumeThat(extensions).isNotEmpty();
+//
+//        jdbcOperations.execute("CREATE EXTENSION IF NOT EXISTS VECTOR;");
+//        jdbcOperations.execute("CREATE TABLE IF NOT EXISTS vector_arrays (id bigserial PRIMARY KEY, embedding vector[3]);");
+//        jdbcOperations.execute("CREATE TABLE IF NOT EXISTS vector_items (id bigserial PRIMARY KEY, embedding vector(3));");
+//
+//        jdbcOperations.execute("DELETE FROM vector_arrays;");
+//        jdbcOperations.execute("DELETE FROM vector_items;");
+//
+//        super.setUp();
+//    }
+//
+//    @Override
+//    protected void customize(GaussDBConnectionConfiguration.Builder builder) {
+//        builder.forceBinary(true);
+//        super.customize(builder);
+//    }
+//
+//    @Test
+//    void shouldReadVector() {
+//
+//        JdbcOperations jdbcOperations = SERVER.getJdbcOperations();
+//
+//        jdbcOperations.execute("INSERT INTO vector_items (embedding) VALUES ('[1,2,3]'), ('[4,5,6]');");
+//
+//        GaussDBConnection connection = this.connectionFactory.create().block();
+//
+//        connection.createStatement("SELECT * FROM vector_items WHERE id != $1 ORDER BY embedding <-> '[3,1,2]' ")
+//            .bind("$1", 1)
+//            .execute()
+//            .flatMap(result -> result.map(readable -> readable.get("embedding")))
+//            .as(StepVerifier::create)
+//            .assertNext(o -> {
+//                assertThat(o).isInstanceOf(Vector.class).isEqualTo(Vector.of(1, 2, 3));
+//            })
+//            .assertNext(o -> {
+//                assertThat(o).isInstanceOf(Vector.class).isEqualTo(Vector.of(4, 5, 6));
+//            })
+//            .verifyComplete();
+//
+//        connection.createStatement("SELECT * FROM vector_items WHERE id != $1 ORDER BY embedding <-> '[3,1,2]' ")
+//            .bind("$1", 1)
+//            .execute()
+//            .flatMap(result -> result.map(readable -> readable.get("embedding", float[].class)))
+//            .as(StepVerifier::create)
+//            .assertNext(o -> {
+//                assertThat(o).contains(1f, 2f, 3f);
+//            })
+//            .assertNext(o -> {
+//                assertThat(o).contains(4, 5, 6);
+//            })
+//            .verifyComplete();
+//
+//        connection.close().block();
+//    }
+//
+//    @Test
+//    void shouldReadVectorArray() {
+//
+//        JdbcOperations jdbcOperations = SERVER.getJdbcOperations();
+//        jdbcOperations.execute("INSERT INTO vector_arrays (embedding) VALUES (ARRAY['[1,2,3]'::vector,'[4,5,6]'::vector]);");
+//
+//        GaussDBConnection connection = this.connectionFactory.create().block();
+//
+//        connection.createStatement("SELECT * FROM vector_arrays WHERE id != $1")
+//            .bind("$1", 1)
+//            .execute()
+//            .flatMap(result -> result.map(readable -> readable.get("embedding")))
+//            .as(StepVerifier::create)
+//            .assertNext(o -> {
+//                assertThat(o).isInstanceOf(Vector[].class);
+//                assertThat((Vector[]) o).contains(Vector.of(1, 2, 3), Vector.of(4, 5, 6));
+//            })
+//            .verifyComplete();
+//
+//        connection.close().block();
+//    }
+//
+//    @Test
+//    void shouldWriteVector() {
+//
+//        GaussDBConnection connection = this.connectionFactory.create().block();
+//
+//        connection.createStatement("INSERT INTO vector_items (embedding) VALUES ($1)")
+//            .bind("$1", Vector.of(1, 2, 3))
+//            .execute()
+//            .flatMap(GaussDBResult::getRowsUpdated)
+//            .as(StepVerifier::create)
+//            .expectNext(1L)
+//            .verifyComplete();
+//
+//        connection.createStatement("SELECT * FROM vector_items")
+//            .execute()
+//            .flatMap(result -> result.map(readable -> readable.get("embedding")))
+//            .as(StepVerifier::create)
+//            .assertNext(o -> {
+//                assertThat(o).isInstanceOf(Vector.class).isEqualTo(Vector.of(1, 2, 3));
+//            }).verifyComplete();
+//
+//        connection.close().block();
+//    }
+//
+//    @Test
+//    void shouldWriteVectorArray() {
+//
+//        GaussDBConnection connection = this.connectionFactory.create().block();
+//
+//        connection.createStatement("INSERT INTO vector_arrays (embedding) VALUES ($1);")
+//            .bind("$1", new Vector[]{Vector.of(1, 2, 3), Vector.of(4, 5, 6)})
+//            .execute()
+//            .flatMap(GaussDBResult::getRowsUpdated)
+//            .as(StepVerifier::create)
+//            .expectNext(1L)
+//            .verifyComplete();
+//
+//        connection.createStatement("SELECT * FROM vector_arrays WHERE id != $1")
+//            .bind("$1", 1)
+//            .execute()
+//            .flatMap(result -> result.map(readable -> readable.get("embedding")))
+//            .as(StepVerifier::create)
+//            .assertNext(o -> {
+//                assertThat(o).isInstanceOf(Vector[].class);
+//                assertThat((Vector[]) o).contains(Vector.of(1, 2, 3), Vector.of(4, 5, 6));
+//            })
+//            .verifyComplete();
+//
+//        connection.close().block();
+//    }
+//
+//    @Test
+//    void shouldWriteVectorArrayWithNulls() {
+//
+//        JdbcOperations jdbcOperations = SERVER.getJdbcOperations();
+//
+//        GaussDBConnection connection = this.connectionFactory.create().block();
+//
+//        connection.createStatement("INSERT INTO vector_arrays (embedding) VALUES ($1);")
+//            .bind("$1", new Vector[]{Vector.of(1, 2, 3), null, Vector.of(4, 5, 6)})
+//            .execute()
+//            .flatMap(GaussDBResult::getRowsUpdated)
+//            .as(StepVerifier::create)
+//            .expectNext(1L)
+//            .verifyComplete();
+//
+//        connection.createStatement("SELECT * FROM vector_arrays WHERE id != $1")
+//            .bind("$1", 1)
+//            .execute()
+//            .flatMap(result -> result.map(readable -> readable.get("embedding")))
+//            .as(StepVerifier::create)
+//            .assertNext(o -> {
+//                assertThat(o).isInstanceOf(Vector[].class);
+//                assertThat((Vector[]) o).contains(Vector.of(1, 2, 3), Vector.of(4, 5, 6));
+//            })
+//            .verifyComplete();
+//
+//        connection.close().block();
+//    }
 
 }

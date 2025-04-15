@@ -20,7 +20,7 @@ final class PostgresqlConnectionRuntimeOptionsIntegrationTests {
     private static final Map<String, String> options = new HashMap<>();
 
     static {
-        options.put("lock_timeout", "5000");
+//        options.put("lock_timeout", "5000");
         options.put("statement_timeout", "60s");
     }
 
@@ -39,13 +39,13 @@ final class PostgresqlConnectionRuntimeOptionsIntegrationTests {
     @Test
     void connectionFactoryShouldApplyParameters() {
         GaussDBConnection connection = (GaussDBConnection) connectionFactory.create().block();
-
-        connection
-            .createStatement("SHOW lock_timeout").execute()
-            .flatMap(result -> result.map((row, rowMetadata) -> row.get("lock_timeout", String.class)))
-            .as(StepVerifier::create)
-            .expectNext("5s")
-            .verifyComplete();
+// TODO: GaussDB do not support lock_timeout parameter
+//        connection
+//            .createStatement("SHOW lock_timeout").execute()
+//            .flatMap(result -> result.map((row, rowMetadata) -> row.get("lock_timeout", String.class)))
+//            .as(StepVerifier::create)
+//            .expectNext("5s")
+//            .verifyComplete();
 
         connection
             .createStatement("SHOW statement_timeout").execute()
@@ -59,16 +59,17 @@ final class PostgresqlConnectionRuntimeOptionsIntegrationTests {
 
     @Test
     void connectionFactoryShouldApplyParametersUsingTimeoutApis() {
+        // TODO: GaussDB do not support lock_timeout parameter
         GaussDBConnection connection = (GaussDBConnection) connectionFactory.create().block();
-        connection.setLockWaitTimeout(Duration.ofSeconds(10)).block();
+//        connection.setLockWaitTimeout(Duration.ofSeconds(10)).block();
         connection.setStatementTimeout(Duration.ofMinutes(2)).block();
 
-        connection
-            .createStatement("SHOW lock_timeout").execute()
-            .flatMap(result -> result.map((row, rowMetadata) -> row.get("lock_timeout", String.class)))
-            .as(StepVerifier::create)
-            .expectNext("10s")
-            .verifyComplete();
+//        connection
+//            .createStatement("SHOW lock_timeout").execute()
+//            .flatMap(result -> result.map((row, rowMetadata) -> row.get("lock_timeout", String.class)))
+//            .as(StepVerifier::create)
+//            .expectNext("10s")
+//            .verifyComplete();
 
         connection
             .createStatement("SHOW statement_timeout").execute()
