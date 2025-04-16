@@ -22,6 +22,7 @@ import io.r2dbc.gaussdb.GaussDBConnectionFactory;
 import io.r2dbc.gaussdb.api.GaussDBConnection;
 import io.r2dbc.gaussdb.api.GaussDBResult;
 import io.r2dbc.spi.Parameters;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataAccessException;
@@ -36,17 +37,14 @@ final class EnumCodecIntegrationTests extends AbstractIntegrationTests {
 
     @BeforeAll
     static void createEnum() {
-        try {
-            SERVER.getJdbcOperations().execute("CREATE TYPE my_enum_with_codec AS ENUM ('HELLO', 'WORLD')");
-        } catch (DataAccessException e) {
-            // ignore duplicate types
-        }
+        SERVER.getJdbcOperations().execute("CREATE TYPE my_enum_with_codec AS ENUM ('HELLO', 'WORLD')");
+        SERVER.getJdbcOperations().execute("CREATE TYPE my_enum_no_codec AS ENUM ('HELLO', 'WORLD')");
+    }
 
-        try {
-            SERVER.getJdbcOperations().execute("CREATE TYPE my_enum_no_codec AS ENUM ('HELLO', 'WORLD')");
-        } catch (DataAccessException e) {
-            // ignore duplicate types
-        }
+    @AfterAll
+    static void dropEnum() {
+        SERVER.getJdbcOperations().execute("DROP TYPE IF EXISTS my_enum_with_codec CASCADE");
+        SERVER.getJdbcOperations().execute("DROP TYPE IF EXISTS my_enum_no_codec CASCADE");
     }
 
     @Override

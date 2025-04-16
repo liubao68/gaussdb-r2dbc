@@ -23,9 +23,9 @@ import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.testcontainers.containers.GaussDBContainer;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.containers.Network;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.MountableFile;
 import reactor.util.annotation.Nullable;
 
@@ -48,13 +48,13 @@ import static org.testcontainers.utility.MountableFile.forHostPath;
  */
 public final class GaussDBServerExtension implements BeforeAllCallback, AfterAllCallback {
 
-    static final String IMAGE_NAME = "postgres:13.3";
+    static final String IMAGE_NAME = "opengauss/opengauss:latest";
 
-    static PostgreSQLContainer<?> containerInstance = null;
+    static GaussDBContainer<?> containerInstance = null;
 
     static Network containerNetwork = null;
 
-    private final Supplier<PostgreSQLContainer<?>> container = () -> {
+    private final Supplier<GaussDBContainer<?>> container = () -> {
 
         if (GaussDBServerExtension.containerInstance != null) {
             return GaussDBServerExtension.containerInstance;
@@ -64,9 +64,9 @@ public final class GaussDBServerExtension implements BeforeAllCallback, AfterAll
         return GaussDBServerExtension.containerInstance = container();
     };
 
-    private final DatabaseContainer postgres = getContainer();
+    private final DatabaseContainer gaussdb = getContainer();
 
-    private final boolean useTestContainer = this.postgres instanceof TestContainer;
+    private final boolean useTestContainer = this.gaussdb instanceof TestContainer;
 
     private HikariDataSource dataSource;
 
@@ -90,13 +90,11 @@ public final class GaussDBServerExtension implements BeforeAllCallback, AfterAll
             preference = properties.getProperty("preference", preference);
         }
 
-        return new External();
-// TODO: now test container is not available for GaussDB, use external
-//        if (preference.equals(External.PREFERENCE)) {
-//            return new External();
-//        }
-//
-//        return new TestContainer(this.container.get());
+        if (preference.equals(External.PREFERENCE)) {
+            return new External();
+        }
+
+        return new TestContainer(this.container.get());
     }
 
     @Override
@@ -148,7 +146,7 @@ public final class GaussDBServerExtension implements BeforeAllCallback, AfterAll
     }
 
     public String getDatabase() {
-        return this.postgres.getDatabase();
+        return this.gaussdb.getDatabase();
     }
 
     public DataSource getDataSource() {
@@ -161,11 +159,11 @@ public final class GaussDBServerExtension implements BeforeAllCallback, AfterAll
     }
 
     public String getHost() {
-        return this.postgres.getHost();
+        return this.gaussdb.getHost();
     }
 
     public int getPort() {
-        return this.postgres.getPort();
+        return this.gaussdb.getPort();
     }
 
     public String getServerCrt() {
@@ -177,28 +175,29 @@ public final class GaussDBServerExtension implements BeforeAllCallback, AfterAll
     }
 
     public String getUsername() {
-        return this.postgres.getUsername();
+        return this.gaussdb.getUsername();
     }
 
     public String getPassword() {
-        return this.postgres.getPassword();
+        return this.gaussdb.getPassword();
     }
 
-    public DatabaseContainer getPostgres() {
-        return this.postgres;
+    public DatabaseContainer getGaussdb() {
+        return this.gaussdb;
     }
 
-    private <T extends PostgreSQLContainer<T>> T container() {
-        T container = new PostgreSQLContainer<T>(IMAGE_NAME)
-            .withCopyFileToContainer(getHostPath("server.crt", 0600), "/var/server.crt")
-            .withCopyFileToContainer(getHostPath("server.key", 0600), "/var/server.key")
-            .withCopyFileToContainer(getHostPath("client.crt", 0600), "/var/client.crt")
-            .withCopyFileToContainer(getHostPath("pg_hba.conf", 0600), "/var/pg_hba.conf")
-            .withCopyFileToContainer(getHostPath("setup.sh", 0755), "/var/setup.sh")
-            .withCopyFileToContainer(getHostPath("test-db-init-script.sql", 0755), "/docker-entrypoint-initdb.d/test-db-init-script.sql")
-            .withReuse(true)
-            .withNetworkAliases("r2dbc-postgres")
-            .withCommand("/var/setup.sh")
+    private <T extends GaussDBContainer<T>> T container() {
+        T container = new GaussDBContainer<T>(IMAGE_NAME)
+            // TODO: not enable image customization now
+//            .withCopyFileToContainer(getHostPath("server.crt", 0600), "/var/server.crt")
+//            .withCopyFileToContainer(getHostPath("server.key", 0600), "/var/server.key")
+//            .withCopyFileToContainer(getHostPath("client.crt", 0600), "/var/client.crt")
+//            .withCopyFileToContainer(getHostPath("pg_hba.conf", 0600), "/var/pg_hba.conf")
+//            .withCopyFileToContainer(getHostPath("setup.sh", 0755), "/var/setup.sh")
+//            .withCopyFileToContainer(getHostPath("test-db-init-script.sql", 0755), "/docker-entrypoint-initdb.d/test-db-init-script.sql")
+//            .withReuse(true)
+//            .withNetworkAliases("r2dbc-postgres")
+//            .withCommand("/var/setup.sh")
             .withNetwork(GaussDBServerExtension.containerNetwork);
 
         return container;
@@ -276,12 +275,12 @@ public final class GaussDBServerExtension implements BeforeAllCallback, AfterAll
 
         @Override
         public String getUsername() {
-            return "r2dbc_test";
+            return GaussDBContainer.DEFAULT_USER_NAME;
         }
 
         @Override
         public String getPassword() {
-            return "R2dbc_test@12";
+            return GaussDBContainer.DEFAULT_PASSWORD;
         }
 
         @Override
@@ -316,7 +315,7 @@ public final class GaussDBServerExtension implements BeforeAllCallback, AfterAll
 
         @Override
         public int getPort() {
-            return this.container.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT);
+            return this.container.getMappedPort(GaussDBContainer.GaussDB_PORT);
         }
 
         @Override
@@ -336,7 +335,7 @@ public final class GaussDBServerExtension implements BeforeAllCallback, AfterAll
 
         @Override
         public String getNetworkAlias() {
-            return "r2dbc-postgres";
+            return "r2dbc-gaussdb";
         }
 
     }

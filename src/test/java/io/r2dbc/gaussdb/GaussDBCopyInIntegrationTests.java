@@ -152,7 +152,8 @@ class GaussDBCopyInIntegrationTests extends AbstractIntegrationTests {
 
         Flux<ByteBuf> data = Flux.just(byteBuf("something,something-invalid\n"));
 
-        verifyCopyInFailed(sql, data, "The input syntax of type timestamp: \"something-invalid\" is invalid.");
+        // GaussDB and OpenGauss has different message
+        verifyCopyInFailed(sql, data, "\"something-invalid\"");
     }
 
     private void verifyCopyInFailed(String sql, Flux<ByteBuf> data, String message) {
@@ -160,7 +161,7 @@ class GaussDBCopyInIntegrationTests extends AbstractIntegrationTests {
             .as(StepVerifier::create)
             .consumeErrorWith(e -> assertThat(e)
                 .isInstanceOf(GaussDBBadGrammarException.class)
-                .hasMessage(message)
+                .hasMessageContaining(message)
             )
             .verify();
     }
