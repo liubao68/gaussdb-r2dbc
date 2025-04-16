@@ -213,16 +213,10 @@
             <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.postgresql</groupId>-->
-<!--            <artifactId>postgresql</artifactId>-->
-<!--            <version>${postgresql.version}</version>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>com.huaweicloud.gaussdb</groupId>
             <artifactId>gaussdbjdbc</artifactId>
-            <version>1.0</version>
+            <version>506.0.0.b058</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -391,6 +385,9 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <!-- database is shared, and table will not drop when test case are running  -->
+                    <parallel>none</parallel>
+                    <threadCount>1</threadCount>
                     <runOrder>random</runOrder>
                     <includes>
                         <include>**/*TestKit.java</include>

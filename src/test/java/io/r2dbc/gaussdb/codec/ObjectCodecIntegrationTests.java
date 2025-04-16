@@ -24,11 +24,8 @@ import reactor.test.StepVerifier;
  * Integration tests for {@link ObjectCodec} usage.
  */
 class ObjectCodecIntegrationTests extends AbstractIntegrationTests {
-
     @Test
     void shouldEncodeNull() {
-
-        SERVER.getJdbcOperations().execute("DROP TABLE IF EXISTS test");
         SERVER.getJdbcOperations().execute("CREATE TABLE test (ci INT4, cs VARCHAR)");
 
         this.connection.createStatement("INSERT INTO test VALUES($1, $2)")

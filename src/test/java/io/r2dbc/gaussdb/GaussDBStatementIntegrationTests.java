@@ -34,7 +34,6 @@ class GaussDBStatementIntegrationTests extends AbstractIntegrationTests {
     @BeforeEach
     void setUp() {
         super.setUp();
-        getJdbcOperations().execute("DROP TABLE IF EXISTS test");
         getJdbcOperations().execute("CREATE TABLE test (id SERIAL PRIMARY KEY, val VARCHAR(255))");
         getJdbcOperations().execute("INSERT INTO test (val) VALUES ('a'), ('a'), ('b'), ('c'), ('c')");
     }

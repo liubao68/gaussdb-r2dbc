@@ -30,7 +30,7 @@ public final class PgPool implements AutoCloseable {
     public PgPool(GaussDBServerExtension server) {
         this.container = new GenericContainer<>("bitnami/pgpool:4.1.0")
             .withExposedPorts(PostgreSQLContainer.POSTGRESQL_PORT)
-            .withEnv("PGPOOL_BACKEND_NODES", String.format("0:%s:%s", server.getPostgres().getNetworkAlias(), PostgreSQLContainer.POSTGRESQL_PORT))
+            .withEnv("PGPOOL_BACKEND_NODES", String.format("0:%s:%s", server.getGaussdb().getNetworkAlias(), PostgreSQLContainer.POSTGRESQL_PORT))
             .withEnv("PGPOOL_SR_CHECK_USER", server.getUsername())
             .withEnv("PGPOOL_SR_CHECK_PASSWORD", server.getPassword())
             .withEnv("PGPOOL_ADMIN_USERNAME", server.getUsername())
@@ -41,7 +41,7 @@ public final class PgPool implements AutoCloseable {
             .withEnv("PGPOOL_PASSWORD", server.getPassword())
             .withEnv("PGPOOL_ENABLE_LDAP", "no")
             .waitingFor(new HostPortWaitStrategy())
-            .withNetwork(server.getPostgres().getNetwork());
+            .withNetwork(server.getGaussdb().getNetwork());
 
         this.container.start();
     }

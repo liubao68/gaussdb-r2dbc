@@ -36,11 +36,11 @@ public final class PgBouncer implements AutoCloseable {
             .withEnv("SERVER_RESET_QUERY_ALWAYS", "1")
             .withEnv("DB_USER", server.getUsername())
             .withEnv("DB_PASSWORD", server.getPassword())
-            .withEnv("DB_HOST", server.getPostgres().getNetworkAlias())
+            .withEnv("DB_HOST", server.getGaussdb().getNetworkAlias())
             .withEnv("DB_PORT", String.valueOf(PostgreSQLContainer.POSTGRESQL_PORT))
             .withEnv("DB_NAME", server.getDatabase())
             .waitingFor(new HostPortWaitStrategy())
-            .withNetwork(server.getPostgres().getNetwork());
+            .withNetwork(server.getGaussdb().getNetwork());
 
         this.container.start();
     }
