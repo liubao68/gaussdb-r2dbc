@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    if: github.repository == 'HuaweiCloudDeveloper/r2dbc-gaussdb'
+    if: github.repository == 'HuaweiCloudDeveloper/gaussdb-r2dbc'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
