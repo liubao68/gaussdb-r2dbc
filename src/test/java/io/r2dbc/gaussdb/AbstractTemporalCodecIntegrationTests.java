@@ -17,6 +17,7 @@
 package io.r2dbc.gaussdb;
 
 import io.r2dbc.gaussdb.api.GaussDBResult;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import reactor.test.StepVerifier;
 
@@ -43,9 +44,14 @@ abstract class AbstractTemporalCodecIntegrationTests extends AbstractIntegration
         builder.timeZone(TimeZone.getTimeZone("UTC"));
     }
 
-    void prepare(String sqlType) {
-
+    @AfterEach
+    @Override
+    void tearDown() {
+       super.tearDown();
         SERVER.getJdbcOperations().execute("DROP TABLE IF EXISTS test");
+    }
+
+    void prepare(String sqlType) {
         SERVER.getJdbcOperations().execute(String.format("CREATE TABLE test (value %s)", sqlType));
     }
 

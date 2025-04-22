@@ -23,10 +23,9 @@ public class GaussDBContainer<SELF extends GaussDBContainer<SELF>> extends JdbcD
 
     public static final String IMAGE = "opengauss/opengauss";
 
-    public static final String DEFAULT_TAG = "latest";
+    public static final String DEFAULT_TAG = "7.0.0-RC1.B023";
 
-    private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("opengauss/opengauss")
-        .asCompatibleSubstituteFor("gaussdb");
+    private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("opengauss/opengauss");
 
     public static final Integer GaussDB_PORT = 8000;
 

@@ -16,22 +16,6 @@
 
 package io.r2dbc.gaussdb.client;
 
-import io.r2dbc.gaussdb.MultiHostConnectionStrategy;
-import io.r2dbc.gaussdb.GaussDBConnectionConfiguration;
-import io.r2dbc.gaussdb.GaussDBConnectionFactory;
-import io.r2dbc.gaussdb.api.GaussDBConnection;
-import io.r2dbc.gaussdb.util.PostgresqlHighAvailabilityClusterExtension;
-import io.r2dbc.spi.Connection;
-import io.r2dbc.spi.R2dbcException;
-import io.r2dbc.spi.R2dbcNonTransientResourceException;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.containers.PostgreSQLContainer;
-import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
 /**
  * Integration tests for multi-node Postgres server topologies.
  */

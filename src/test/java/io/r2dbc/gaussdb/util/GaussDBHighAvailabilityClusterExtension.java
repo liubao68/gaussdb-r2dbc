@@ -22,8 +22,8 @@ import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.testcontainers.containers.GaussDBContainer;
 import org.testcontainers.containers.Network;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
@@ -37,13 +37,13 @@ import java.time.temporal.ChronoUnit;
 
 import static org.testcontainers.utility.MountableFile.forHostPath;
 
-public class PostgresqlHighAvailabilityClusterExtension implements BeforeAllCallback, AfterAllCallback {
+public class GaussDBHighAvailabilityClusterExtension implements BeforeAllCallback, AfterAllCallback {
 
-    private PostgreSQLContainer<?> primary;
+    private GaussDBContainer<?> primary;
 
     private HikariDataSource primaryDataSource;
 
-    private PostgreSQLContainer<?> standby;
+    private GaussDBContainer<?> standby;
 
     private HikariDataSource standbyDataSource;
 
@@ -70,7 +70,7 @@ public class PostgresqlHighAvailabilityClusterExtension implements BeforeAllCall
         this.startStandby(network);
     }
 
-    public PostgreSQLContainer<?> getPrimary() {
+    public GaussDBContainer<?> getPrimary() {
         return this.primary;
     }
 
@@ -78,7 +78,7 @@ public class PostgresqlHighAvailabilityClusterExtension implements BeforeAllCall
         return new JdbcTemplate(this.primaryDataSource);
     }
 
-    public PostgreSQLContainer<?> getStandby() {
+    public GaussDBContainer<?> getStandby() {
         return this.standby;
     }
 
@@ -91,7 +91,7 @@ public class PostgresqlHighAvailabilityClusterExtension implements BeforeAllCall
     }
 
     private static Path getResourcePath(String name) {
-        URL resource = PostgresqlHighAvailabilityClusterExtension.class.getClassLoader().getResource(name);
+        URL resource = GaussDBHighAvailabilityClusterExtension.class.getClassLoader().getResource(name);
         if (resource == null) {
             throw new IllegalStateException("Resource not found: " + name);
         }
@@ -104,7 +104,7 @@ public class PostgresqlHighAvailabilityClusterExtension implements BeforeAllCall
     }
 
     private void startPrimary(Network network) {
-        this.primary = new PostgreSQLContainer<>(GaussDBServerExtension.IMAGE_NAME)
+        this.primary = new GaussDBContainer<>(GaussDBServerExtension.IMAGE_NAME)
             .withNetwork(network)
             .withNetworkAliases("postgres-primary")
             .withCopyFileToContainer(getHostPath("setup-primary.sh", 0755), "/docker-entrypoint-initdb.d/setup-primary.sh")
@@ -119,7 +119,7 @@ public class PostgresqlHighAvailabilityClusterExtension implements BeforeAllCall
     }
 
     private void startStandby(Network network) {
-        this.standby = new CustomPostgreSQLContainer(GaussDBServerExtension.IMAGE_NAME)
+        this.standby = new CustomGaussDBSQLContainer(GaussDBServerExtension.IMAGE_NAME)
             .withNetwork(network)
             .withCopyFileToContainer(getHostPath("setup-standby.sh", 0755), "/setup-standby.sh")
             .withCommand("/setup-standby.sh")
@@ -136,8 +136,8 @@ public class PostgresqlHighAvailabilityClusterExtension implements BeforeAllCall
     }
 
     // setWaitStrategy() doesn't seem to work, only inside constructor
-    static class CustomPostgreSQLContainer extends PostgreSQLContainer<CustomPostgreSQLContainer> {
-        public CustomPostgreSQLContainer(String dockerImageName) {
+    static class CustomGaussDBSQLContainer extends GaussDBContainer<CustomGaussDBSQLContainer> {
+        public CustomGaussDBSQLContainer(String dockerImageName) {
             super(DockerImageName.parse(dockerImageName));
             this.waitStrategy =
                     new LogMessageWaitStrategy()

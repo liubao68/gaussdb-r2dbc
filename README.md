@@ -19,16 +19,12 @@ This driver provides the following features:
 * Read and write support for a majority of data types (see [Data Type Mapping](#data-type-mapping) for details)
 * Extension points to register `Codec`s to handle additional GaussDB data types
 
-Next steps:
-
-* Multi-dimensional arrays
-
 [p]: https://www.huaweicloud.com/product/gaussdb.html
 [r]: https://github.com/r2dbc/r2dbc-spi
 
 ## Code of Conduct
 
-This project is governed by the [Code of Conduct](.github/CODE_OF_CONDUCT.adoc). By participating, you are expected to uphold this code of conduct. Please report unacceptable behavior to [r2dbc@googlegroups.com](mailto:r2dbc@googlegroups.com).
+This project is governed by the [Code of Conduct](.github/CODE_OF_CONDUCT.adoc). By participating, you are expected to uphold this code of conduct. 
 
 ## Getting Started
 
@@ -37,7 +33,7 @@ Here is a quick teaser of how to use R2DBC GaussDB in Java:
 **URL Connection Factory Discovery**
 
 ```java
-ConnectionFactory connectionFactory = ConnectionFactories.get("r2dbc:gaussdb://<host>:5432/<database>");
+ConnectionFactory connectionFactory = ConnectionFactories.get("r2dbc:gaussdb://<host>:8000/<database>");
 
 Publisher<? extends Connection> connectionPublisher = connectionFactory.create();
 ```
@@ -50,7 +46,7 @@ Map<String, String> options = new HashMap<>();
 ConnectionFactory connectionFactory = ConnectionFactories.get(ConnectionFactoryOptions.builder()
    .option(DRIVER, "gaussdb")
    .option(HOST, "...")
-   .option(PORT, 5432)  // optional, defaults to 5432
+   .option(PORT, 8000)  // optional, defaults to 8000
    .option(USER, "...")
    .option(PASSWORD, "...")
    .option(DATABASE, "...")  // optional
@@ -111,7 +107,7 @@ Mono<Connection> connectionMono = Mono.from(connectionFactory.create());
 Map<String, String> options = new HashMap<>();
 PostgresqlConnectionFactory connectionFactory = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
     .host("...")
-    .port(5432)  // optional, defaults to 5432
+    .port(8000)  // optional, defaults to 8000
     .username("...")
     .password("...")
     .database("...")  // optional
@@ -176,13 +172,13 @@ in order until the connection succeeds. If none succeeds a normal connection exc
 The syntax for the connection url is:
 
 ```
-r2dbc:gaussdb:failover://user:foo@host1:5433,host2:5432,host3
+r2dbc:gaussdb:failover://user:foo@host1:8000,host2:8000,host3
 ```
 
 For example an application can create two connection pools. One data source is for writes, another for reads. The write pool limits connections only to a primary node:
 
 ```
-r2dbc:gaussdb:failover://user:foo@host1:5433,host2:5432,host3?targetServerType=primary.
+r2dbc:gaussdb:failover://user:foo@host1:8000,host2:8000,host3?targetServerType=primary.
 ```
 
 ## Cursors
@@ -196,6 +192,8 @@ size or enable compatibility mode. Compatibility mode avoids cursors in auto-com
 as message flow.
 
 ## Listen/Notify
+
+> This feature not implemented yet
 
 Listen and Notify provide a simple form of signal or inter-process communication mechanism for processes accessing the same PostgreSQL database. For Listen/Notify, two actors are involved: The
 sender (notify) and the receiver (listen). The following example uses two connections to illustrate how they work together:
@@ -347,6 +345,8 @@ connection.createStatement("SELECT show_cities_multiple()").execute()
 
 ## Logical Decode
 
+> This feature not implemented yet
+
 PostgreSQL allows replication streaming and decoding persistent changes to a database's tables into useful chunks of data.
 In PostgreSQL, logical decoding is implemented by decoding the contents of the write-ahead log, which describe changes on a storage level, into an application-specific form such as a stream of tuples or SQL statements.
 
@@ -418,9 +418,9 @@ When available, the driver registers also an array variant of the codec.
 
 ## Data Type Mapping
 
-This reference table shows the type mapping between [PostgreSQL][p] and Java data types:
+This reference table shows the type mapping between [GaussDB][p] and Java data types:
 
-| PostgreSQL Type                                  | Supported Data Type                                                                                                                         | 
+| GaussDB Type                                     | Supported Data Type                                                                                                                         | 
 |:-------------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------|
 | [`bigint`][psql-bigint-ref]                      | [**`Long`**][java-long-ref], [`Boolean`][java-boolean-ref], [`Byte`][java-byte-ref], [`Short`][java-short-ref], [`Integer`][java-integer-ref], [`BigDecimal`][java-bigdecimal-ref], [`BigInteger`][java-biginteger-ref] |
 | [`bit`][psql-bit-ref]                            | Not yet supported.|
@@ -474,36 +474,36 @@ Types in **bold** indicate the native (default) Java type.
 
 Support for the following single-dimensional arrays (read and write):
 
-| PostgreSQL Type                                 | Supported Data Type                   |
-|:------------------------------------------------|:--------------------------------------|
-| [`bytea[]`][psql-bytea-ref]                     | [**`ByteBuffer[]`**][java-ByteBuffer-ref], [`byte[][]`][java-byte-ref]|
-| [`boolean[] or bool[]`][psql-boolean-ref]       | [`Boolean[]`][java-boolean-ref]       |
-| [`box[]`][psql-box-ref]                         | **`Box[]`**|
-| [`character`][psql-character-ref]               | [`String[]`][java-string-ref]|
-| [`character varying`][psql-character-ref]       | [`String[]`][java-string-ref]|
-| [`circle[]`][psql-circle-ref]                   | **`Circle[]`**|
-| [`date[]`][psql-date-ref]                       | [`LocalDate[]`][java-ld-ref]|
-| [`double precision[]`][psql-floating-point-ref] | [**`Double[]`**][java-double-ref], [`Float[]`][java-float-ref], [`Boolean[]`][java-boolean-ref], [`Byte[]`][java-byte-ref], [`Short[]`][java-short-ref], [`Integer[]`][java-integer-ref], [`Long[]`][java-long-ref], [`BigDecimal[]`][java-bigdecimal-ref], [`BigInteger[]`][java-biginteger-ref]|
-| [enumerated type arrays][psql-enum-ref]         | Client code `Enum[]` types through `EnumCodec`|
-| [`inet[]`][psql-inet-ref]                       | [**`InetAddress[]`**][java-inet-ref]|
-| [`integer`[]][psql-integer-ref]                 | [**`Integer[]`**][java-integer-ref], [`Boolean[]`][java-boolean-ref], [`Byte[]`][java-byte-ref], [`Short[]`][java-short-ref], [`Long[]`][java-long-ref], [`BigDecimal[]`][java-bigdecimal-ref], [`BigInteger[]`][java-biginteger-ref]|
-| [`interval[]`][psql-interval-ref]               | **`Interval[]`**|
-| [`line[]`][psql-line-ref]                       | **`Line[]`**|
-| [`lseg[]`][psql-lseq-ref]                       | **`Lseg[]`**|
-| [`numeric[]`][psql-bignumeric-ref]              | [`BigDecimal[]`][java-bigdecimal-ref], [`Boolean[]`][java-boolean-ref], [`Byte[]`][java-byte-ref], [`Short[]`][java-short-ref], [`Integer[]`][java-integer-ref], [`Long[]`][java-long-ref], [`BigInteger[]`][java-biginteger-ref]|
-| [`path[]`][psql-path-ref]                       | **`Path[]`**|
-| [`point[]`][psql-point-ref]                     | **`Point[]`**|
-| [`polygon[]`][psql-polygon-ref]                 | **`Polygon[]`**|
-| [`real[]`][psql-real-ref]                       | [**`Float[]`**][java-float-ref], [`Double[]`][java-double-ref], [`Boolean[]`][java-boolean-ref], [`Byte[]`][java-byte-ref], [`Short[]`][java-short-ref], [`Integer[]`][java-integer-ref], [`Long[]`][java-long-ref], [`BigDecimal[]`][java-bigdecimal-ref], [`BigInteger[]`][java-biginteger-ref]|
-| [`smallint[]`][psql-smallint-ref]               | [**`Short[]`**][java-short-ref], [`Boolean[]`][java-boolean-ref], [`Byte[]`][java-byte-ref], [`Integer[]`][java-integer-ref], [`Long[]`][java-long-ref], [`BigDecimal[]`][java-bigdecimal-ref], [`BigInteger[]`][java-biginteger-ref]|
-| [`smallserial[]`][psql-smallserial-ref]         | [**`Integer[]`**][java-integer-ref], [`Boolean[]`][java-boolean-ref], [`Byte[]`][java-byte-ref], [`Short[]`][java-short-ref], [`Long[]`][java-long-ref], [`BigDecimal[]`][java-bigdecimal-ref], [`BigInteger[]`][java-biginteger-ref]|
-| [`serial[]`][psql-serial-ref]                   | [**`Long[]`**][java-long-ref], [`Boolean[]`][java-boolean-ref], [`Byte[]`][java-byte-ref], [`Short[]`][java-short-ref], [`Integer[]`][java-integer-ref], [`BigDecimal[]`][java-bigdecimal-ref], [`BigInteger[]`][java-biginteger-ref]|
-| [`text[]`][psql-text-ref]                       | [`String[]`][java-string-ref]         |
-| [`time[] [without time zone]`][psql-time-ref]   | [`LocalTime[]`][java-lt-ref]|
-| [`time[] [with time zone]`][psql-time-ref]      | [`OffsetTime[]`][java-ot-ref]|
-| [`timestamp[] [without time zone]`][psql-time-ref]|[**`LocalDateTime[]`**][java-ldt-ref], [`LocalTime[]`][java-lt-ref], [`LocalDate[]`][java-ld-ref], [`java.util.Date[]`][java-legacy-date-ref]|
-| [`timestamp[] [with time zone]`][psql-time-ref] | [**`OffsetDatetime[]`**][java-odt-ref], [`ZonedDateTime[]`][java-zdt-ref], [`Instant[]`][java-instant-ref]|
-| [`uuid[]`][psql-uuid-ref]                       | [**`UUID[]`**][java-uuid-ref], [`String[]`][java-string-ref]||
+| GaussDB Type                                       | Supported Data Type                   |
+|:---------------------------------------------------|:--------------------------------------|
+| [`bytea[]`][psql-bytea-ref]                        | [**`ByteBuffer[]`**][java-ByteBuffer-ref], [`byte[][]`][java-byte-ref]|
+| [`boolean[] or bool[]`][psql-boolean-ref]          | [`Boolean[]`][java-boolean-ref]       |
+| [`box[]`][psql-box-ref]                            | **`Box[]`**|
+| [`character`][psql-character-ref]                  | [`String[]`][java-string-ref]|
+| [`character varying`][psql-character-ref]          | [`String[]`][java-string-ref]|
+| [`circle[]`][psql-circle-ref]                      | **`Circle[]`**|
+| [`date[]`][psql-date-ref]                          | [`LocalDate[]`][java-ld-ref]|
+| [`double precision[]`][psql-floating-point-ref]    | [**`Double[]`**][java-double-ref], [`Float[]`][java-float-ref], [`Boolean[]`][java-boolean-ref], [`Byte[]`][java-byte-ref], [`Short[]`][java-short-ref], [`Integer[]`][java-integer-ref], [`Long[]`][java-long-ref], [`BigDecimal[]`][java-bigdecimal-ref], [`BigInteger[]`][java-biginteger-ref]|
+| [enumerated type arrays][psql-enum-ref]            | Client code `Enum[]` types through `EnumCodec`|
+| [`inet[]`][psql-inet-ref]                          | [**`InetAddress[]`**][java-inet-ref]|
+| [`integer`[]][psql-integer-ref]                    | [**`Integer[]`**][java-integer-ref], [`Boolean[]`][java-boolean-ref], [`Byte[]`][java-byte-ref], [`Short[]`][java-short-ref], [`Long[]`][java-long-ref], [`BigDecimal[]`][java-bigdecimal-ref], [`BigInteger[]`][java-biginteger-ref]|
+| [`interval[]`][psql-interval-ref]                  | **`Interval[]`**|
+| [`line[]`][psql-line-ref]                          | **`Line[]`**|
+| [`lseg[]`][psql-lseq-ref]                          | **`Lseg[]`**|
+| [`numeric[]`][psql-bignumeric-ref]                 | [`BigDecimal[]`][java-bigdecimal-ref], [`Boolean[]`][java-boolean-ref], [`Byte[]`][java-byte-ref], [`Short[]`][java-short-ref], [`Integer[]`][java-integer-ref], [`Long[]`][java-long-ref], [`BigInteger[]`][java-biginteger-ref]|
+| [`path[]`][psql-path-ref]                          | **`Path[]`**|
+| [`point[]`][psql-point-ref]                        | **`Point[]`**|
+| [`polygon[]`][psql-polygon-ref]                    | **`Polygon[]`**|
+| [`real[]`][psql-real-ref]                          | [**`Float[]`**][java-float-ref], [`Double[]`][java-double-ref], [`Boolean[]`][java-boolean-ref], [`Byte[]`][java-byte-ref], [`Short[]`][java-short-ref], [`Integer[]`][java-integer-ref], [`Long[]`][java-long-ref], [`BigDecimal[]`][java-bigdecimal-ref], [`BigInteger[]`][java-biginteger-ref]|
+| [`smallint[]`][psql-smallint-ref]                  | [**`Short[]`**][java-short-ref], [`Boolean[]`][java-boolean-ref], [`Byte[]`][java-byte-ref], [`Integer[]`][java-integer-ref], [`Long[]`][java-long-ref], [`BigDecimal[]`][java-bigdecimal-ref], [`BigInteger[]`][java-biginteger-ref]|
+| [`smallserial[]`][psql-smallserial-ref]            | [**`Integer[]`**][java-integer-ref], [`Boolean[]`][java-boolean-ref], [`Byte[]`][java-byte-ref], [`Short[]`][java-short-ref], [`Long[]`][java-long-ref], [`BigDecimal[]`][java-bigdecimal-ref], [`BigInteger[]`][java-biginteger-ref]|
+| [`serial[]`][psql-serial-ref]                      | [**`Long[]`**][java-long-ref], [`Boolean[]`][java-boolean-ref], [`Byte[]`][java-byte-ref], [`Short[]`][java-short-ref], [`Integer[]`][java-integer-ref], [`BigDecimal[]`][java-bigdecimal-ref], [`BigInteger[]`][java-biginteger-ref]|
+| [`text[]`][psql-text-ref]                          | [`String[]`][java-string-ref]         |
+| [`time[] [without time zone]`][psql-time-ref]      | [`LocalTime[]`][java-lt-ref]|
+| [`time[] [with time zone]`][psql-time-ref]         | [`OffsetTime[]`][java-ot-ref]|
+| [`timestamp[] [without time zone]`][psql-time-ref] |[**`LocalDateTime[]`**][java-ldt-ref], [`LocalTime[]`][java-lt-ref], [`LocalDate[]`][java-ld-ref], [`java.util.Date[]`][java-legacy-date-ref]|
+| [`timestamp[] [with time zone]`][psql-time-ref]    | [**`OffsetDatetime[]`**][java-odt-ref], [`ZonedDateTime[]`][java-zdt-ref], [`Instant[]`][java-instant-ref]|
+| [`uuid[]`][psql-uuid-ref]                          | [**`UUID[]`**][java-uuid-ref], [`String[]`][java-string-ref]||
 
 [psql-bigint-ref]: https://www.postgresql.org/docs/current/datatype-numeric.html#DATATYPE-INT
 [psql-bit-ref]: https://www.postgresql.org/docs/current/datatype-numeric.html
@@ -579,9 +579,9 @@ Support for the following single-dimensional arrays (read and write):
 ## Extension mechanism
 This driver accepts the following extensions:
 
-* `CodecRegistrar` to contribute `Codec`s for PostgreSQL ObjectIDs. 
+* `CodecRegistrar` to contribute `Codec`s for GaussDB ObjectIDs. 
 
-Extensions can be registered programmatically using `PostgresConnectionConfiguration` or discovered using Java's `ServiceLoader` mechanism (from `META-INF/services/io.r2dbc.gaussdb.extension.Extension`).
+Extensions can be registered programmatically using `GaussDBConnectionConfiguration` or discovered using Java's `ServiceLoader` mechanism (from `META-INF/services/io.r2dbc.gaussdb.extension.Extension`).
 
 The driver ships with built-in dynamic codecs (e.g. `hstore`, PostGIS `geometry`) that are registered during the connection handshake depending on their availability while connecting. Note that Postgres extensions registered after a connection was established require a reconnect to initialize the codec. 
 
@@ -608,23 +608,23 @@ Having trouble with R2DBC? We'd love to help!
 * Ask a question - we monitor [stackoverflow.com](https://stackoverflow.com) for questions
   tagged with [`r2dbc`](https://stackoverflow.com/tags/r2dbc). 
   You can also chat with the community on [Gitter](https://gitter.im/r2dbc/r2dbc).
-* Report bugs with R2DBC PostgreSQL at [github.com/pgjdbc/r2dbc-postgresql/issues](https://github.com/pgjdbc/r2dbc-postgresql/issues).
+* Report bugs with R2DBC GaussDB at [github.com/HuaweiCloudDeveloper/r2dbc-gaussdb/issues](https://github.com/HuaweiCloudDeveloper/r2dbc-gaussdb/issues).
 
 ## Reporting Issues
 
 R2DBC uses GitHub as issue tracking system to record bugs and feature requests. 
 If you want to raise an issue, please follow the recommendations below:
 
-* Before you log a bug, please search the [issue tracker](https://github.com/pgjdbc/r2dbc-postgresql/issues) to see if someone has already reported the problem.
-* If the issue doesn't already exist, [create a new issue](https://github.com/pgjdbc/r2dbc-postgresql/issues/new).
-* Please provide as much information as possible with the issue report, we like to know the version of R2DBC PostgreSQL that you are using and JVM version.
+* Before you log a bug, please search the [issue tracker](https://github.com/HuaweiCloudDeveloper/r2dbc-gaussdb/issues) to see if someone has already reported the problem.
+* If the issue doesn't already exist, [create a new issue](https://github.com/HuaweiCloudDeveloper/r2dbc-gaussdb/issues/new).
+* Please provide as much information as possible with the issue report, we like to know the version of R2DBC GaussDB that you are using and JVM version.
 * If you need to paste code, or include a stack trace use Markdown ``` escapes before and after your text.
 * If possible try to create a test-case or project that replicates the issue. 
 Attach a link to your code or a compressed file containing your code.
 
 ## Building from Source
 
-You don't need to build from source to use R2DBC PostgreSQL (binaries in Maven Central), but if you want to try out the latest and greatest, R2DBC PostgreSQL can be easily built with the
+You don't need to build from source to use R2DBC GaussDB (binaries in Maven Central), but if you want to try out the latest and greatest, R2DBC GaussDB can be easily built with the
 [maven wrapper](https://github.com/takari/maven-wrapper). You also need JDK 1.8 and Docker to run integration tests.
 
 ```bash
