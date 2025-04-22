@@ -5,11 +5,11 @@ name: Stage release to Maven Central
 
 on:
   push:
-    branches: [ release-0.x ]
+    branches: [ release-1.x ]
 
 jobs:
   release:
-    if: github.repository == 'pgjdbc/r2dbc-gaussdb'
+    if: github.repository == 'HuaweiCloudDeveloper/r2dbc-gaussdb'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

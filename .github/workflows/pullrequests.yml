@@ -17,4 +17,4 @@ jobs:
           distribution: temurin
           cache: maven
       - name: Build with Maven
-        run: ./mvnw -B verify -D skipITs
+        run: ./mvnw -B verify
