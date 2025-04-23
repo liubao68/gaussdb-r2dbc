@@ -11,6 +11,7 @@ jobs:
   build:
     if: github.repository == 'HuaweiCloudDeveloper/gaussdb-r2dbc'
     runs-on: ubuntu-latest
+    environment: r2dbc-build
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 17
