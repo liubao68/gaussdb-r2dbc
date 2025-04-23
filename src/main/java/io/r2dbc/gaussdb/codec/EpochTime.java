@@ -44,9 +44,6 @@ class EpochTime {
         return LocalDateTime.ofEpochSecond(getSeconds(), getNanos(), ZoneOffset.UTC);
     }
 
-    /**
-     * original implementation https://github.com/pgjdbc/pgjdbc/blob/master/pgjdbc/src/main/java/org/postgresql/jdbc/TimestampUtils.java#L1333
-     */
     private long toJavaSeconds(long secs) {
         // GaussDB epoch to java epoch
         secs += 946684800L;
