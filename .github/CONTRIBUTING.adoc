@@ -14,21 +14,11 @@ First off, thank you for taking the time to contribute! 👍 🎉
 [[code-of-conduct]]
 == Code of Conduct
 
-This project is governed by the link:https://github.com/pgjdbc/r2dbc-postgresql/blob/main/.github/CODE_OF_CONDUCT.adoc[Code of Conduct].
+This project is governed by the link:https://github.com/HuaweiCloudDeveloper/gaussdb-r2dbc/blob/main/.github/CODE_OF_CONDUCT.adoc[Code of Conduct].
 By participating you are expected to uphold this code.
-Please report unacceptable behavior to r2dbc@googlegroups.com.
 
 [[how-to-contribute]]
 == How to Contribute
-
-[[discuss]]
-=== Discuss
-
-If you have a question, check https://stackoverflow.com/tags/r2dbc[StackOverflow] using the https://stackoverflow.com/tags/r2dbc[r2dbc] tag or the link:https://groups.google.com/forum/#!forum/r2dbc[mailing list]
-Find an existing discussion or start a new one if necessary.
-
-If you suspect an issue, perform a search in the GitHub tracker of the R2DBC project, using a few different keywords.
-When you find related issues and discussions, prior or current, it helps you to learn and it helps us to make a decision.
 
 === Create a Ticket
 
@@ -87,5 +77,5 @@ In other words, you do not need to create a new pull request when asked to make 
 [[source-code-style]]
 == Source Code Style
 
-We provide an IntelliJ link:https://github.com/pgjdbc/r2dbc-postgresql/blob/main/intellij-style.xml[IDEA code formatting configuration] that defines the source file coding standards.
+We provide an IntelliJ link:https://github.com/HuaweiCloudDeveloper/gaussdb-r2dbc/blob/main/intellij-style.xml[IDEA code formatting configuration] that defines the source file coding standards.
 Import and use the provided configuration to avoid formatting changes in pull requests.
