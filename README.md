@@ -33,7 +33,8 @@ Here is a quick teaser of how to use R2DBC GaussDB in Java:
 **URL Connection Factory Discovery**
 
 ```java
-ConnectionFactory connectionFactory = ConnectionFactories.get("r2dbc:gaussdb://<host>:8000/<database>");
+ConnectionFactory connectionFactory = connectionFactory = ConnectionFactories.get(
+        "r2dbc:gaussdb://GaussdbExamples:Gaussdb-Examples-123@localhost:8000/postgres");
 
 Publisher<? extends Connection> connectionPublisher = connectionFactory.create();
 ```
@@ -41,22 +42,32 @@ Publisher<? extends Connection> connectionPublisher = connectionFactory.create()
 **Programmatic Connection Factory Discovery**
 
 ```java
-Map<String, String> options = new HashMap<>();
-
 ConnectionFactory connectionFactory = ConnectionFactories.get(ConnectionFactoryOptions.builder()
-   .option(DRIVER, "gaussdb")
-   .option(HOST, "...")
-   .option(PORT, 8000)  // optional, defaults to 8000
-   .option(USER, "...")
-   .option(PASSWORD, "...")
-   .option(DATABASE, "...")  // optional
-   .option(OPTIONS, options) // optional
-   .build());
+        .option(ConnectionFactoryOptions.DRIVER, "gaussdb")
+        .option(ConnectionFactoryOptions.HOST, "localhost")
+        .option(ConnectionFactoryOptions.PORT, 8000)
+        .option(ConnectionFactoryOptions.USER, "GaussdbExamples")
+        .option(ConnectionFactoryOptions.PASSWORD, "Gaussdb-Examples-123")
+        .option(ConnectionFactoryOptions.DATABASE, "postgres").build());
 
 Publisher<? extends Connection> connectionPublisher = connectionFactory.create();
+```
 
-// Alternative: Creating a Mono using Project Reactor
-Mono<Connection> connectionMono = Mono.from(connectionFactory.create());
+**Programmatic Configuration**
+
+```java
+Map<String, String> options = new HashMap<>();
+GaussDBConnectionFactory gaussDBConnectionFactory = new GaussDBConnectionFactory(
+        GaussDBConnectionConfiguration.builder()
+                .host("localhost")
+                .port(8000)
+                .username("GaussdbExamples")
+                .password("Gaussdb-Examples-123")
+                .database("postgres")  // optional
+                .options(options) // optional
+                .build());
+
+Publisher<? extends Connection> connectionPublisher = connectionFactory.create();
 ```
 
 **Supported ConnectionFactory Discovery Options**
@@ -101,21 +112,6 @@ Mono<Connection> connectionMono = Mono.from(connectionFactory.create());
 | `tcpKeepAlive`                  | Enable/disable TCP KeepAlive. Disabled by default. _(Optional)_
 | `timeZone`                      | Configure the session timezone to control conversion of local temporal representations. Defaults to `TimeZone.getDefault()` _(Optional)_
 
-**Programmatic Configuration**
-
-```java
-Map<String, String> options = new HashMap<>();
-PostgresqlConnectionFactory connectionFactory = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
-    .host("...")
-    .port(8000)  // optional, defaults to 8000
-    .username("...")
-    .password("...")
-    .database("...")  // optional
-    .options(options) // optional
-    .build());
-
-Mono<Connection> mono = connectionFactory.create();
-```
 
 GaussDB uses index parameters that are prefixed with `$`.  The following SQL statement makes use of parameters:
 
