@@ -188,16 +188,6 @@ public final class GaussDBServerExtension implements BeforeAllCallback, AfterAll
 
     private <T extends GaussDBContainer<T>> T container() {
         T container = new GaussDBContainer<T>(IMAGE_NAME)
-            // TODO: not enable image customization now
-//            .withCopyFileToContainer(getHostPath("server.crt", 0600), "/var/server.crt")
-//            .withCopyFileToContainer(getHostPath("server.key", 0600), "/var/server.key")
-//            .withCopyFileToContainer(getHostPath("client.crt", 0600), "/var/client.crt")
-//            .withCopyFileToContainer(getHostPath("pg_hba.conf", 0600), "/var/pg_hba.conf")
-//            .withCopyFileToContainer(getHostPath("setup.sh", 0755), "/var/setup.sh")
-//            .withCopyFileToContainer(getHostPath("test-db-init-script.sql", 0755), "/docker-entrypoint-initdb.d/test-db-init-script.sql")
-//            .withReuse(true)
-//            .withNetworkAliases("r2dbc-postgres")
-//            .withCommand("/var/setup.sh")
             .withNetwork(GaussDBServerExtension.containerNetwork);
 
         return container;
