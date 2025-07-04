@@ -74,7 +74,7 @@ Publisher<? extends Connection> connectionPublisher = connectionFactory.create()
 
 | Option                          | Description
 |---------------------------------| -----------
-| `ssl`                           | Enables SSL usage (`SSLMode.VERIFY_FULL`).
+| `ssl`                           | Enables SSL usage, default to false. .
 | `driver`                        | Must be `gaussdb`.
 | `protocol`                      | Protocol specifier. Empty to use single-host operations. Supported: `failover` for multi-server failover operations. _(Optional)_
 | `host`                          | Server hostname to connect to. May contain a comma-separated list of hosts with ports when using the `failover` protocol.
@@ -83,7 +83,7 @@ Publisher<? extends Connection> connectionPublisher = connectionFactory.create()
 | `username`                      | Login username. Can be a plain `String`, `Supplier<String>`, or `Publisher<String>`.
 | `password`                      | Login password. Can be a plain `CharSequence`, `Supplier<CharSequence>`, or `Publisher<CharSequence>`. _(Optional when using TLS Certificate authentication)_
 | `database`                      | Database to select. _(Optional)_
-| `applicationName`               | The name of the application connecting to the database. Defaults to `r2dbc-postgresql`. _(Optional)_
+| `applicationName`               | The name of the application connecting to the database. Defaults to `r2dbc-gaussdb`. _(Optional)_
 | `autodetectExtensions`          | Whether to auto-detect and register `Extension`s from the class path. Defaults to `true`. _(Optional)_
 | `compatibilityMode`             | Enable compatibility mode for cursored fetching. Required when using newer pgpool versions. Defaults to `false`. _(Optional)_
 | `errorResponseLogLevel`         | Log level for error responses. Any of `OFF`, `DEBUG`, `INFO`, `WARN` or `ERROR`  Defaults to `DEBUG`. _(Optional)_
@@ -99,7 +99,7 @@ Publisher<? extends Connection> connectionPublisher = connectionFactory.create()
 | `preparedStatementCacheQueries` | Determine the number of queries that are cached in each connection. The default is `-1`, meaning there's no limit. The value of `0` disables the cache. Any other value specifies the cache size.
 | `options`                       | A `Map<String, String>` of connection parameters. These are applied to each database connection created by the `ConnectionFactory`. Useful for setting generic [PostgreSQL connection parameters][psql-runtime-config]. _(Optional)_
 | `schema`                        | The search path to set. _(Optional)_
-| `sslMode`                       | SSL mode to use, see `SSLMode` enum. Supported values: `DISABLE`, `ALLOW`, `PREFER`, `REQUIRE`, `VERIFY_CA`, `VERIFY_FULL`, `TUNNEL`. _(Optional)_
+| `sslMode`                       | SSL mode to use, see `SSLMode` enum. Supported values: `DISABLE`, `ALLOW`, `PREFER`, `REQUIRE`, `VERIFY_CA`, `VERIFY_FULL`, default to `VERIFY_FULL`. _(Optional)_
 | `sslRootCert`                   | Path to SSL CA certificate in PEM format. Can be also a resource path. _(Optional)_
 | `sslKey`                        | Path to SSL key for TLS authentication in PEM format. Can be also a resource path. _(Optional)_
 | `sslCert`                       | Path to SSL certificate for TLS authentication in PEM format. Can be also a resource path. _(Optional)_
