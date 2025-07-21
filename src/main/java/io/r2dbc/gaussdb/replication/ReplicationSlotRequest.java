@@ -28,12 +28,9 @@ public abstract class ReplicationSlotRequest {
 
     private final String slotName;
 
-    private final boolean temporary;
-
-    ReplicationSlotRequest(ReplicationType replicationType, String slotName, boolean temporary) {
+    ReplicationSlotRequest(ReplicationType replicationType, String slotName) {
         this.replicationType = Assert.requireNonNull(replicationType, "replicationType must not be null");
         this.slotName = Assert.requireNotEmpty(slotName, "slotName must not be null");
-        this.temporary = temporary;
     }
 
     /**
@@ -80,32 +77,22 @@ public abstract class ReplicationSlotRequest {
     }
 
     /**
-     * Returns the slot is temporary.
-     *
-     * @return {@code true} if the slot should be temporary
-     */
-    boolean isTemporary() {
-        return this.temporary;
-    }
-
-    /**
      * Slot creation request for logical replication.
      */
     static class LogicalReplicationSlotRequest extends ReplicationSlotRequest {
 
         private final String outputPlugin;
 
-        public LogicalReplicationSlotRequest(String slotName, boolean temporaryOption, String outputPlugin) {
-            super(ReplicationType.LOGICAL, slotName, temporaryOption);
+        public LogicalReplicationSlotRequest(String slotName, String outputPlugin) {
+            super(ReplicationType.LOGICAL, slotName);
             this.outputPlugin = outputPlugin;
         }
 
         @Override
         public String asSQL() {
             return String.format(
-                "CREATE_REPLICATION_SLOT %s %s LOGICAL %s",
+                "CREATE_REPLICATION_SLOT %s LOGICAL %s",
                 getSlotName(),
-                isTemporary() ? "TEMPORARY" : "",
                 this.outputPlugin
             );
         }
@@ -115,7 +102,6 @@ public abstract class ReplicationSlotRequest {
             return "LogicalReplicationSlotRequest{" +
                 "slotName='" + getSlotName() + '\'' +
                 ", outputPlugin='" + this.outputPlugin + '\'' +
-                ", temporaryOption=" + isTemporary() +
                 '}';
         }
 
@@ -127,15 +113,14 @@ public abstract class ReplicationSlotRequest {
     static class PhysicalReplicationSlotRequest extends ReplicationSlotRequest {
 
         public PhysicalReplicationSlotRequest(String slotName, boolean temporaryOption) {
-            super(ReplicationType.PHYSICAL, slotName, temporaryOption);
+            super(ReplicationType.PHYSICAL, slotName);
         }
 
         @Override
         public String asSQL() {
             return String.format(
-                "CREATE_REPLICATION_SLOT %s %s PHYSICAL",
-                getSlotName(),
-                isTemporary() ? "TEMPORARY" : ""
+                "CREATE_REPLICATION_SLOT %s PHYSICAL",
+                getSlotName()
             );
         }
 
@@ -143,7 +128,6 @@ public abstract class ReplicationSlotRequest {
         public String toString() {
             return "PhysicalReplicationSlotRequest{" +
                 "slotName='" + getSlotName() + '\'' +
-                ", temporaryOption=" + isTemporary() +
                 '}';
         }
 
@@ -154,8 +138,6 @@ public abstract class ReplicationSlotRequest {
         private String slotName;
 
         private String outputPlugin;
-
-        private boolean temporary;
 
         @Override
         public LogicalSlotRequestBuilder slotName(String slotName) {
@@ -171,13 +153,12 @@ public abstract class ReplicationSlotRequest {
 
         @Override
         public LogicalSlotRequestBuilder temporary() {
-            this.temporary = true;
             return this;
         }
 
         @Override
         public ReplicationSlotRequest build() {
-            return new LogicalReplicationSlotRequest(this.slotName, this.temporary, this.outputPlugin);
+            return new LogicalReplicationSlotRequest(this.slotName, this.outputPlugin);
         }
 
     }

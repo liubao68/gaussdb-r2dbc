@@ -55,9 +55,13 @@ final class KeepAliveMessage {
         ByteBuf out = allocator.buffer(34);
 
         out.writeByte(KEEP_ALIVE_REPLY);
+        out.writeLong(Long.MAX_VALUE);
         out.writeLong(this.received.asLong());
         out.writeLong(this.flushed.asLong());
+        out.writeLong(Long.MAX_VALUE);
         out.writeLong(this.applied.asLong());
+        out.writeLong(Long.MAX_VALUE);
+        out.writeLong(Long.MAX_VALUE);
         out.writeLong(this.systemClock);
 
         if (this.replyRequired) {
@@ -65,6 +69,11 @@ final class KeepAliveMessage {
         } else {
             out.writeByte(this.received == LogSequenceNumber.INVALID_LSN ? (byte) REPLY_REQUIRED : (byte) NO_REPLY_REQUIRED);
         }
+
+        out.writeInt(0);
+        out.writeByte(1);
+        out.writeByte(1);
+        out.writeByte(1);
 
         return out;
     }
