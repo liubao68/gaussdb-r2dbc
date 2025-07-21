@@ -141,10 +141,11 @@ final class GaussDBReplicationStream implements ReplicationStream {
             this.lastReceiveLSN = this.lastServerLSN;
         }
 
-        long lastServerClock = buffer.readLong();
-        boolean replyRequired = buffer.readByte() != 0;
+        buffer.readInt(); // serverMode
+        buffer.readInt(); // dbState
+        buffer.readLong(); // lastServerClock
 
-        return replyRequired;
+        return  buffer.readByte() != 0;
     }
 
     private void processXLogData(ByteBuf buffer) {

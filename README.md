@@ -341,50 +341,17 @@ connection.createStatement("SELECT show_cities_multiple()").execute()
 
 ## Logical Decode
 
-> This feature not implemented yet
-
-PostgreSQL allows replication streaming and decoding persistent changes to a database's tables into useful chunks of data.
-In PostgreSQL, logical decoding is implemented by decoding the contents of the write-ahead log, which describe changes on a storage level, into an application-specific form such as a stream of tuples or SQL statements.
-
-Consuming the replication stream is a four-step process:
-
-1. Obtain a replication connection via `PostgresqlConnectionFactory.replication()`.
-2. Create a replication slot (physical/logical).
-3. Initiate replication using the replication slot.
-4. Once the replication stream is set up, you can consume and map the binary data using `ReplicationStream.map(…)`.
-
-On application shutdown, `close()` the `ReplicationStream`.
-
-Note that a connection is busy once the replication is active and a connection can have at most one active replication stream.  
-
-```java
-Mono<PostgresqlReplicationConnection> replicationMono = connectionFactory.replication();
-
-// later:
-ReplicationSlotRequest request = ReplicationSlotRequest.logical()
-                                        .slotName("my_slot")
-                                        .outputPlugin("test_decoding")
-                                        .temporary()
-                                        .build();
-Mono<ReplicationSlot> createSlot = replicationConnection.createSlot(request);
-
-ReplicationRequest replicationRequest = ReplicationRequest.logical()
-                                        .slotName("my_slot")
-                                        .startPosition(LogSequenceNumber.valueOf(0))
-                                        .slotOption("skip-empty-xacts", true)
-                                        .slotOption("include-xids", false)
-                                        .build();
-
-Flux<T> replicationStream = replicationConnection.startReplication(replicationRequest).flatMapMany(it -> {
-    return it.map(byteBuf -> {…})
-        .doOnError(t -> it.close().subscribe());
-});
-```
+GaussDB allows replication streaming and decoding persistent changes to a database's tables into useful chunks of data.
+In GaussDB, logical decoding is implemented by decoding the contents of the write-ahead log, which describe changes on a storage level, 
+into an application-specific form such as a stream of tuples or SQL statements.
+ 
+see https://github.com/HuaweiCloudDeveloper/gaussdb-r2dbc-examples for Logical Decode examples.
 
 ## GaussDB Enum Types
 
-Applications may make use of Postgres enumerated types by using `EnumCodec` to map custom types to Java `enum` types. 
-`EnumCodec` requires the Postgres OID and the Java to map enum values to the Postgres protocol and to materialize Enum instances from Postgres results. 
+Applications may make use of GaussDB enumerated types by using `EnumCodec` to map custom types to Java `enum` types. 
+`EnumCodec` requires the GaussDB OID and the Java to map enum values to the GaussDB protocol and to materialize Enum instances 
+from GaussDB results. 
 You can configure a `CodecRegistrar` through `EnumCodec.builder()` for one or more enumeration type mappings. Make sure to use different Java enum types otherwise the driver is not able to distinguish between Postgres OIDs. 
 
 Example:
@@ -406,7 +373,7 @@ enum MyEnumType {
 **Codec Registration:**
 
 ```java
-PostgresqlConnectionConfiguration.builder()
+GaussDBConnectionConfiguration.builder()
         .codecRegistrar(EnumCodec.builder().withEnum("my_enum",MyEnumType.class).build());
 ```
 

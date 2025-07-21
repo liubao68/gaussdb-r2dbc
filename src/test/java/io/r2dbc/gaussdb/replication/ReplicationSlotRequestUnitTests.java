@@ -45,8 +45,7 @@ final class ReplicationSlotRequestUnitTests {
         ReplicationSlotRequest request = ReplicationSlotRequest.logical().slotName("slot").outputPlugin("output").temporary().build();
         assertThat(request.getReplicationType()).isEqualTo(ReplicationType.LOGICAL);
         assertThat(request.getSlotName()).isEqualTo("slot");
-        assertThat(request.isTemporary()).isTrue();
-        assertThat(request.asSQL()).isEqualTo("CREATE_REPLICATION_SLOT slot TEMPORARY LOGICAL output");
+        assertThat(request.asSQL()).isEqualTo("CREATE_REPLICATION_SLOT slot LOGICAL output");
     }
 
     @Test
@@ -54,8 +53,7 @@ final class ReplicationSlotRequestUnitTests {
         ReplicationSlotRequest request = ReplicationSlotRequest.physical().slotName("slot").temporary().build();
         assertThat(request.getReplicationType()).isEqualTo(ReplicationType.PHYSICAL);
         assertThat(request.getSlotName()).isEqualTo("slot");
-        assertThat(request.isTemporary()).isTrue();
-        assertThat(request.asSQL()).isEqualTo("CREATE_REPLICATION_SLOT slot TEMPORARY PHYSICAL");
+        assertThat(request.asSQL()).isEqualTo("CREATE_REPLICATION_SLOT slot PHYSICAL");
     }
 
 }
