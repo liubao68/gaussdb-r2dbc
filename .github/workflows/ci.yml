@@ -1,17 +1,14 @@
-# This workflow will build a Java project with Maven
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
-
-name: Java CI with Maven
+name: Build with Maven
 
 on:
+  pull_request:
+    branches: [ main ]
   push:
     branches: [ main ]
 
 jobs:
-  build:
-    if: github.repository == 'HuaweiCloudDeveloper/gaussdb-r2dbc'
+  pr-build:
     runs-on: ubuntu-latest
-    environment: r2dbc-build
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 17
@@ -21,9 +18,4 @@ jobs:
           distribution: adopt
           cache: maven
       - name: Build with Maven
-        env:
-          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          GPG_KEY_BASE64: ${{ secrets.GPG_KEY_BASE64 }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        run: ./mvnw -B deploy -P snapshot -s settings.xml
+        run: ./mvnw -B verify
