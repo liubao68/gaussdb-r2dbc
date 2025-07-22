@@ -11,7 +11,6 @@ This driver provides the following features:
 * Connection Fail-over supporting multiple hosts
 * TLS
 * Explicit transactions
-* Notifications
 * Logical Decode
 * Binary data transfer
 * Execution of prepared statements with bindings
@@ -21,10 +20,6 @@ This driver provides the following features:
 
 [p]: https://www.huaweicloud.com/product/gaussdb.html
 [r]: https://github.com/r2dbc/r2dbc-spi
-
-## Code of Conduct
-
-This project is governed by the [Code of Conduct](.github/CODE_OF_CONDUCT.adoc). By participating, you are expected to uphold this code of conduct. 
 
 ## Getting Started
 
@@ -144,22 +139,6 @@ Artifacts can be found on [Maven Central](https://search.maven.org/search?q=gaus
 </dependency>
 ```
 
-If you'd rather like the latest snapshots of the upcoming major version, use our Maven snapshot repository and declare the appropriate dependency version.
-
-```xml
-<dependency>
-  <groupId>com.huaweicloud.gaussdb</groupId>
-  <artifactId>gaussdb-r2dbc</artifactId>
-  <version>${version}.SNAPSHOT</version>
-</dependency>
-
-<repository>
-<id>sonatype-nexus-snapshots</id>
-<name>Sonatype OSS Snapshot Repository</name>
-<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-</repository>
-```
-
 ## Connection Fail-over
 
 To support simple connection fail-over it is possible to define multiple endpoints (host and port pairs) in the connection url separated by commas. The driver will try once to connect to each of them
@@ -186,31 +165,6 @@ Cursored fetching is activated by configuring a `fetchSize`. Postgres cursors ar
 require an explicit transaction (`BEGIN…COMMIT/ROLLBACK`). Newer pgpool versions don't support this feature. To work around this limitation, either use explicit transactions when configuring a fetch
 size or enable compatibility mode. Compatibility mode avoids cursors in auto-commit mode (`Execute` with no limit + `Sync`). Cursors in a transaction use `Execute` (with fetch size as limit) + `Sync`
 as message flow.
-
-## Listen/Notify
-
-> This feature not implemented yet
-
-Listen and Notify provide a simple form of signal or inter-process communication mechanism for processes accessing the same PostgreSQL database. For Listen/Notify, two actors are involved: The
-sender (notify) and the receiver (listen). The following example uses two connections to illustrate how they work together:
-
-```java
-PostgresqlConnection sender= …;
-        PostgresqlConnection receiver= …;
-
-Flux<Notification> listen = receiver.createStatement("LISTEN mymessage")
-                                .execute()
-                                .flatMap(PostgresqlResult::getRowsUpdated)
-        .thenMany(receiver.getNotifications());
-
-        Mono<Void> notify=sender.createStatement("NOTIFY mymessage, 'Hello World'")
-        .execute()
-        .flatMap(PostgresqlResult::getRowsUpdated)
-        .then();
-```                                                                                                                       
-
-Upon subscription, the first connection enters listen mode and publishes incoming `Notification`s as `Flux`. The second connection broadcasts a notification to the `mymessage` channel upon
-subscription.
 
 ## Transaction Definitions
 
@@ -606,7 +560,6 @@ Running the JMH benchmarks builds and runs the benchmarks without running tests.
  $ ./mvnw clean install -Pjmh
 ```
 
-## License
-This project is released under version 2.0 of the [Apache License][l].
+## Code of Conduct
 
-[l]: https://www.apache.org/licenses/LICENSE-2.0
+This project is governed by the [Code of Conduct](.github/CODE_OF_CONDUCT.adoc). By participating, you are expected to uphold this code of conduct.
